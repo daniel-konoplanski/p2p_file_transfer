@@ -1,0 +1,59 @@
+# Build artifacts
+/build/
+/CMakeFiles/
+/CMakeCache.txt
+/Makefile
+/*.cmake
+/*.ninja
+
+# vcpkg
+/vcpkg_installed/
+/vcpkg/buildtrees/
+/vcpkg/packages/
+/vcpkg/downloads/
+/scripts/bootstrap-*.log
+
+# Compiled binaries and libraries
+*.exe
+*.dll
+*.so
+*.dylib
+*.lib
+*.a
+*.obj
+*.o
+
+# Testing
+/*.log
+/Testing/
+CTestTestfile.cmake
+/*.log
+
+# IDEs and editors
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln
+*.vcxproj*
+*.xcodeproj
+*.xcworkspace
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# Logs and temp files
+*.log
+*.tmp
+*.temp
+
+# Documentation build
+/docs/html/
+/docs/xml/
+/docs/latex/
+
+# Others
+*.swp
+*~
