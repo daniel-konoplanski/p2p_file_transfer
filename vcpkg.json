@@ -1,7 +1,23 @@
 {
+    "name": "p2pfiletransfer",
+    "version-string": "1.0.0",
+    "builtin-baseline": "1b4a65242adfd65a82b1d1a6f31f1accdfe09af9",
     "dependencies": [
         {
-            "name": "gtest"
+            "name": "gtest",
+            "version>=": "1.17.0"
+        },
+        {
+            "name": "boost-asio",
+            "version>=": "1.89.0"
+        },
+        {
+            "name": "openssl",
+            "version>=": "3.6.0"
+        },
+        {
+            "name": "spdlog",
+            "version>=": "1.16.0"
         }
     ]
 }
