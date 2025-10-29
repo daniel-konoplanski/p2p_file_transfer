@@ -10,4 +10,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(WARNING_FLAGS -Wall -Wextra -Wpedantic -Werror)
 add_compile_options(${WARNING_FLAGS})
 
+# Find all required libraries
+find_package(Boost REQUIRED COMPONENTS asio system)
+find_package(OpenSSL REQUIRED)
+find_package(GTest REQUIRED)
+find_package(spdlog REQUIRED)
+
 add_subdirectory(src)
