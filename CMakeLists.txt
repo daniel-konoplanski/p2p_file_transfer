@@ -11,6 +11,8 @@ set(WARNING_FLAGS -Wall -Wextra -Wpedantic -Werror)
 add_compile_options(${WARNING_FLAGS})
 
 # Find all required libraries
+find_package(CLI11 REQUIRED)
+find_package(indicators REQUIRED)
 find_package(Boost REQUIRED COMPONENTS asio system)
 find_package(OpenSSL REQUIRED)
 find_package(GTest REQUIRED)

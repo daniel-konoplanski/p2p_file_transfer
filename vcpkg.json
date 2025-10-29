@@ -18,6 +18,14 @@
         {
             "name": "spdlog",
             "version>=": "1.16.0"
+        },
+        {
+            "name": "cli11",
+            "version>=": "2.5.0"
+        },
+        {
+            "name": "indicators",
+            "version>=": "2.3"
         }
     ]
 }
