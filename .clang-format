@@ -4,7 +4,7 @@ AlignAfterOpenBracket: AlwaysBreak
 AlignArrayOfStructures: None
 AlignConsecutiveAssignments: true
 AlignConsecutiveBitFields: true
-AlignConsecutiveDeclarations: false
+AlignConsecutiveDeclarations: false # maybe change this to true
 AlignConsecutiveMacros: true
 AlignEscapedNewlines: Left
 AlignOperands: true
@@ -109,12 +109,18 @@ IncludeCategories:
   - Regex: '^<.*\.(h|hpp)>'
     Priority: 5
     CaseSensitive: true
-  - Regex: '^<(\")?(testing|ut|mocks|tests)/.*\.(h|hpp)(\")?>'
+  - Regex: 'lib.cli/'
     Priority: 6
     CaseSensitive: true
-  - Regex: '^<.*\"'
+  - Regex: 'p2pft/'
     Priority: 7
     CaseSensitive: true
-  - Regex: ' .*'
+  - Regex: '^<(\")?(testing|ut|mocks|tests)/.*\.(h|hpp)(\")?>'
     Priority: 8
+    CaseSensitive: true
+  - Regex: '^<.*\"'
+    Priority: 9
+    CaseSensitive: true
+  - Regex: ' .*'
+    Priority: 10
     CaseSensitive: true

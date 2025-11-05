@@ -1,36 +1,31 @@
-#include <CLI/CLI.hpp>
-#include <boost/asio.hpp>
-#include <boost/asio/ip/address.hpp>
-#include <boost/asio/ip/address_v4.hpp>
+#include <memory>
 
-enum class Mode : u_int8_t
+#include <spdlog/spdlog.h>
+
+#include "lib.cli/parser.hpp"
+
+#include "p2pft/application.hpp"
+#include "p2pft/startup/app_runner.hpp"
+
+enum ExitCodes : int
 {
-    SENDER,
-    RECEIVER
+    SUCCESS,
+    STARTUP_FAILURE
 };
 
 int main(int argc, char* argv[])
 {
-    CLI::App app{ "P2P File Transfer" };
+    auto args = cli::Parser::parse(argc, argv);
 
-    std::string dest;
-    std::string path;
-    int         port = 8888;
+    std::unique_ptr<p2pft::IApplication> app = std::visit(p2pft::startup::AppVisitor{}, args);
 
-    auto send = app.add_subcommand("send", "Send files to a receiver");
-    send->add_option("-t,--target", dest, "Address of the receiver")->required();
-    send->add_option("-i,--input", path, "File to transfer")->required();
-    send->add_option("-p,--port", port, "Port number");
+    if (!app)
+    {
+        spdlog::error("Failed to start the application!");
+        return ExitCodes::STARTUP_FAILURE;
+    }
 
-    auto receive = app.add_subcommand("receive", "Receive files from a sender");
-    receive->add_option("-o,--out-dir", port, "Port number")->required();
-    receive->add_option("-p,--port", port, "Port number");
+    app->start();
 
-    CLI11_PARSE(app, argc, argv);
-
-    std::cout << "dest: " << dest << "\n"
-              << "path: " << path << "\n"
-              << "port: " << port << "\n";
-
-    return 0;
+    return ExitCodes::SUCCESS;
 }
