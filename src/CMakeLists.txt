@@ -1,4 +1,4 @@
-add_executable(p2p_ft main.cpp)
+add_executable(p2p_ft main.cpp p2pft/receiver/receiver.cpp)
 
 # target_link_libraries(p2p_ft
 #     PRIVATE
@@ -15,6 +15,10 @@ add_subdirectory(lib.cli)
 
 target_link_libraries(p2p_ft
     PRIVATE cli
-    PRIVATE spdlog::spdlog
+    PRIVATE Boost::asio
+    PRIVATE Boost::system
 )
 
+target_include_directories(p2p_ft PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)

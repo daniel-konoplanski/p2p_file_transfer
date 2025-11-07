@@ -1,6 +1,5 @@
 #include <memory>
-
-#include <spdlog/spdlog.h>
+#include <print>
 
 #include "lib.cli/parser.hpp"
 
@@ -16,12 +15,11 @@ enum ExitCodes : int
 int main(int argc, char* argv[])
 {
     auto args = cli::Parser::parse(argc, argv);
-
-    std::unique_ptr<p2pft::IApplication> app = std::visit(p2pft::startup::AppVisitor{}, args);
+    auto app  = std::visit(p2pft::startup::AppVisitor{}, args);
 
     if (!app)
     {
-        spdlog::error("Failed to start the application!");
+        std::print("Failed to start the application!");
         return ExitCodes::STARTUP_FAILURE;
     }
 
