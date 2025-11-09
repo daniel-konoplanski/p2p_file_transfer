@@ -17,6 +17,8 @@ target_link_libraries(p2p_ft
     PRIVATE cli
     PRIVATE Boost::asio
     PRIVATE Boost::system
+    PRIVATE gRPC::grpc++
+    PRIVATE protobuf::libprotobuf
 )
 
 target_include_directories(p2p_ft PRIVATE
