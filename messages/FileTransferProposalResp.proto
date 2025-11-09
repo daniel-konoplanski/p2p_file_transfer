@@ -1,0 +1,9 @@
+syntax = "proto3";
+package p2pft;
+
+import "Result.proto";
+
+message FileTransferProposalResp
+{
+    Result result = 1;
+}

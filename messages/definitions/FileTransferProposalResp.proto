@@ -1,0 +1,13 @@
+syntax = "proto3";
+package p2pft;
+
+enum Result
+{
+    ACCEPTED = 0;
+    REJECTED = 1;
+}
+
+message FileTransferProposalResp
+{
+    Result result = 1;
+}

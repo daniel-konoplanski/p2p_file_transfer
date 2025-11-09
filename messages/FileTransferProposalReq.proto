@@ -1,0 +1,13 @@
+syntax = "proto3";
+package p2pft;
+
+message FileInfo
+{
+    string name = 1;
+    int64 size = 2; // in KB
+}
+
+message FileTransferProposalReq
+{
+    repeated FileInfo files = 1;
+}

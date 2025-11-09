@@ -25,13 +25,23 @@ void Receiver::start()
 
     std::print("Listening for incomming requests...");
 
-    acceptor_->async_accept([](boost::system::error_code ec, tcp::socket socket) {
+    auto acceptorHandler = [](boost::system::error_code ec, tcp::socket) {
         if (ec)
         {
             std::print("Failed to accept the connection {}", ec.message());
             return;
         }
-    });
+
+        // if (session_)
+        // {
+        //     std::print("Session is already ongoing, connection refused");
+        //     return;
+        // }
+
+        // session_ = std::make_shared<Session>();
+    };
+
+    acceptor_->async_accept(acceptorHandler);
 }
 
 }  // namespace p2pft

@@ -1,0 +1,7 @@
+syntax = "proto3";
+package p2pft;
+
+message FileTransferComplete
+{
+    Result result = 1;
+}

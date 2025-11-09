@@ -1,3 +1,5 @@
+include("${CMAKE_SOURCE_DIR}/cmake/build_proto.cmake")
+
 add_executable(p2p_ft main.cpp p2pft/receiver/receiver.cpp)
 
 # target_link_libraries(p2p_ft
