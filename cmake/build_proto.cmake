@@ -10,8 +10,13 @@ set(PROTO_FILES
 )
 
 # where to put generated .pb.h/.pb.cc (desired output)
-set(PROTO_GEN_DIR "${CMAKE_BINARY_DIR}/src/proto/messages")
-file(MAKE_DIRECTORY "${PROTO_GEN_DIR}")
+set(PROTO_SRC_DIR "${CMAKE_BINARY_DIR}/proto/src")
+set(PROTO_INCLUDE_DIR "${CMAKE_BINARY_DIR}/proto/include")
+set(PROTO_TEMP_DIR "${CMAKE_BINARY_DIR}/proto_temp")
+
+file(MAKE_DIRECTORY "${PROTO_SRC_DIR}")
+file(MAKE_DIRECTORY "${PROTO_INCLUDE_DIR}")
+file(MAKE_DIRECTORY "${PROTO_TEMP_DIR}")
 
 set(GENERATED_SRCS "")
 set(GENERATED_HDRS "")
@@ -28,7 +33,9 @@ message(STATUS "----------------------------")
 
 # single-line values
 message(STATUS "PROTO_DIR:         ${PROTO_DIR}")
-message(STATUS "PROTO_GEN_DIR:     ${PROTO_GEN_DIR}")
+message(STATUS "PROTO_SRC_DIR:     ${PROTO_SRC_DIR}")
+message(STATUS "PROTO_INCLUDE_DIR: ${PROTO_SRC_DIR}")
+message(STATUS "PROTO_TEMP_DIR:    ${PROTO_TEMP_DIR}")
 message(STATUS "PROTOC_EXECUTABLE: ${PROTOC_EXECUTABLE}")
 
 list(LENGTH PROTO_FILES _total)
@@ -48,20 +55,25 @@ foreach(proto ${PROTO_FILES})
   endif()
 
   get_filename_component(pname ${proto} NAME_WE)
-  set(out_cc "${PROTO_GEN_DIR}/${pname}.pb.cc")
-  set(out_h  "${PROTO_GEN_DIR}/${pname}.pb.h")
+
+  set(temp_cc "${PROTO_TEMP_DIR}/${pname}.pb.cc")
+  set(temp_h  "${PROTO_TEMP_DIR}/${pname}.pb.h")
+  set(out_cc "${PROTO_SRC_DIR}/${pname}.pb.cc")
+  set(out_h  "${PROTO_INCLUDE_DIR}/${pname}.pb.h")
 
   add_custom_command(
     OUTPUT "${out_cc}" "${out_h}"
-    COMMAND ${PROTOC_EXECUTABLE}
-    ARGS --cpp_out=${PROTO_GEN_DIR} -I ${PROTO_DIR} ${proto}
+    COMMAND ${PROTOC_EXECUTABLE} --cpp_out=${PROTO_TEMP_DIR} -I ${PROTO_DIR} ${proto}
+    COMMAND ${CMAKE_COMMAND} -E copy ${temp_cc} ${out_cc}
+    COMMAND ${CMAKE_COMMAND} -E copy ${temp_h} ${out_h}
     DEPENDS "${proto}"
-    COMMENT "Generating protobuf ${pname} -> ${PROTO_GEN_DIR}"
+    COMMENT "Generating ${pname}.pb.{cc,h}"
     VERBATIM
   )
 
   list(APPEND GENERATED_SRCS "${out_cc}")
   list(APPEND GENERATED_HDRS "${out_h}")
+
 endforeach()
 
 # ensure generation runs as part of the build
