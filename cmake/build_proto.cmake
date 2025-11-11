@@ -18,8 +18,8 @@ file(MAKE_DIRECTORY "${PROTO_SRC_DIR}")
 file(MAKE_DIRECTORY "${PROTO_INCLUDE_DIR}")
 file(MAKE_DIRECTORY "${PROTO_TEMP_DIR}")
 
-set(GENERATED_SRCS "")
-set(GENERATED_HDRS "")
+set(GENERATED_PROTO_SRCS "")
+set(GENERATED_PROTO_HDRS "")
 
 # hint vcpkg-installed protoc under the project build tree
 find_program(PROTOC_EXECUTABLE NAMES protoc
@@ -28,7 +28,7 @@ find_program(PROTOC_EXECUTABLE NAMES protoc
 
 # pretty-print helper for debugging
 message(STATUS "----------------------------")
-message(STATUS "         Proto info")
+message(STATUS "         Proto info         ")
 message(STATUS "----------------------------")
 
 # single-line values
@@ -71,10 +71,11 @@ foreach(proto ${PROTO_FILES})
     VERBATIM
   )
 
-  list(APPEND GENERATED_SRCS "${out_cc}")
-  list(APPEND GENERATED_HDRS "${out_h}")
-
+  list(APPEND GENERATED_PROTO_SRCS "${out_cc}")
+  list(APPEND GENERATED_PROTO_HDRS "${out_h}")
 endforeach()
 
-# ensure generation runs as part of the build
-add_custom_target(p2pft_protos ALL DEPENDS ${GENERATED_SRCS} ${GENERATED_HDRS})
+# Create proto lib
+add_library(p2pft_proto_lib STATIC ${GENERATED_PROTO_HDRS} ${GENERATED_PROTO_SRCS})
+target_link_libraries(p2pft_proto_lib PRIVATE protobuf::libprotobuf)
+target_include_directories(p2pft_proto_lib PUBLIC ${PROTO_INCLUDE_DIR})
