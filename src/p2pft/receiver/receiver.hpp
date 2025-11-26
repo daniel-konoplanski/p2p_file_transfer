@@ -16,7 +16,6 @@ using IoContext      = boost::asio::io_context;
 using IoContextPtr   = std::shared_ptr<IoContext>;
 using TcpAcceptor    = boost::asio::ip::tcp::acceptor;
 using TcpAcceptorPtr = std::shared_ptr<TcpAcceptor>;
-// using SessionPtr     = std::shared_ptr<Session>;
 
 class Receiver : public IApplication
 {
@@ -29,7 +28,7 @@ private:
     cli::ReceiverArgs args_;
     IoContextPtr      ioContext_;
     TcpAcceptorPtr    acceptor_;
-    // SessionPtr        session_;
+    SessionPtr        session_;
 };
 
 }  // namespace p2pft

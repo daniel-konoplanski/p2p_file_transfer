@@ -103,24 +103,27 @@ IncludeCategories:
   - Regex: '^<boost/'
     Priority: 3
     CaseSensitive: true
-  - Regex: '^<CLI/'
+  - Regex: '^<google/'
     Priority: 4
     CaseSensitive: true
-  - Regex: '^<.*\.(h|hpp)>'
+  - Regex: '^<CLI/'
     Priority: 5
     CaseSensitive: true
-  - Regex: 'lib.cli/'
+  - Regex: '^<.*\.(h|hpp)>'
     Priority: 6
     CaseSensitive: true
-  - Regex: 'p2pft/'
+  - Regex: 'lib.cli/'
     Priority: 7
     CaseSensitive: true
-  - Regex: '^<(\")?(testing|ut|mocks|tests)/.*\.(h|hpp)(\")?>'
+  - Regex: 'p2pft/'
     Priority: 8
     CaseSensitive: true
-  - Regex: '^<.*\"'
+  - Regex: '^<(\")?(testing|ut|mocks|tests)/.*\.(h|hpp)(\")?>'
     Priority: 9
     CaseSensitive: true
-  - Regex: ' .*'
+  - Regex: '^<.*\"'
     Priority: 10
+    CaseSensitive: true
+  - Regex: ' .*'
+    Priority: 11
     CaseSensitive: true
