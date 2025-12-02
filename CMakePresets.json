@@ -2,63 +2,91 @@
     "version": 8,
     "configurePresets": [
         {
-            "name": "x86_64-linux-gcc",
-            "generator": "Ninja",
-            "binaryDir": "${sourceDir}/build",
+            "name": "ninja-base",
+            "hidden": true,
+            "generator": "Ninja"
+        },
+        {
+            "name": "x86_64-linux-gcc-base",
+            "hidden": true,
+            "inherits": [
+                "ninja-base"
+            ],
             "cacheVariables": {
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-                "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/toolchains/x86_64-linux-gcc.cmake"
+                "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/toolchains/x86_64-linux-gcc.cmake",
+                "VCPKG_INSTALLED_DIR": "${sourceDir}/build/x86_64-linux-gcc/vcpkg_installed"
             }
         },
         {
-            "name": "x86_64-linux-clang",
-            "generator": "Ninja",
-            "binaryDir": "${sourceDir}/build",
+            "name": "x86_64-linux-gcc-debug",
+            "inherits": [
+                "x86_64-linux-gcc-base"
+            ],
+            "binaryDir": "${sourceDir}/build/x86_64-linux-gcc/debug",
             "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-                "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/toolchains/x86_64-linux-clang.cmake"
+                "CMAKE_BUILD_TYPE": "Debug"
             }
         },
         {
-            "name": "x86_64-windows-msvc",
-            "generator": "Ninja",
-            "binaryDir": "${sourceDir}/build",
+            "name": "x86_64-linux-gcc-release",
+            "inherits": [
+                "x86_64-linux-gcc-base"
+            ],
+            "binaryDir": "${sourceDir}/build/x86_64-linux-gcc/release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "x86_64-linux-clang-base",
+            "hidden": true,
+            "inherits": [
+                "ninja-base"
+            ],
             "cacheVariables": {
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-                "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/toolchains/x86_64-windows-msvc.cmake"
+                "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/toolchains/x86_64-linux-clang.cmake",
+                "VCPKG_INSTALLED_DIR": "${sourceDir}/build/x86_64-linux-clang/vcpkg_installed"
+            }
+        },
+        {
+            "name": "x86_64-linux-clang-debug",
+            "inherits": [
+                "x86_64-linux-clang-base"
+            ],
+            "binaryDir": "${sourceDir}/build/x86_64-linux-clang/debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "x86_64-linux-clang-release",
+            "inherits": [
+                "x86_64-linux-clang-base"
+            ],
+            "binaryDir": "${sourceDir}/build/x86_64-linux-clang/release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
             }
         }
     ],
     "buildPresets": [
         {
             "name": "x86_64-linux-gcc-debug",
-            "configurePreset": "x86_64-linux-gcc",
-            "configuration": "Debug"
+            "configurePreset": "x86_64-linux-gcc-debug"
         },
         {
             "name": "x86_64-linux-gcc-release",
-            "configurePreset": "x86_64-linux-gcc",
-            "configuration": "Release"
+            "configurePreset": "x86_64-linux-gcc-release"
         },
         {
             "name": "x86_64-linux-clang-debug",
-            "configurePreset": "x86_64-linux-clang",
-            "configuration": "Debug"
+            "configurePreset": "x86_64-linux-clang-debug"
         },
         {
             "name": "x86_64-linux-clang-release",
-            "configurePreset": "x86_64-linux-clang",
-            "configuration": "Release"
-        },
-        {
-            "name": "x86_64-windows-msvc-debug",
-            "configurePreset": "x86_64-windows-msvc",
-            "configuration": "Debug"
-        },
-        {
-            "name": "x86_64-windows-msvc-release",
-            "configurePreset": "x86_64-windows-msvc",
-            "configuration": "Release"
+            "configurePreset": "x86_64-linux-clang-release"
         }
     ]
 }

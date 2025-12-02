@@ -1,6 +1,6 @@
 {
     "name": "p2pfiletransfer",
-    "version-string": "1.0.0",
+    "version-string": "0.0.1",
     "builtin-baseline": "1b4a65242adfd65a82b1d1a6f31f1accdfe09af9",
     "dependencies": [
         {
