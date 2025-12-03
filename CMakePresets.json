@@ -14,8 +14,7 @@
             ],
             "cacheVariables": {
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-                "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/toolchains/x86_64-linux-gcc.cmake",
-                "VCPKG_INSTALLED_DIR": "${sourceDir}/build/x86_64-linux-gcc/vcpkg_installed"
+                "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/toolchains/x86_64-linux-gcc.cmake"
             }
         },
         {
@@ -46,8 +45,7 @@
             ],
             "cacheVariables": {
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-                "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/toolchains/x86_64-linux-clang.cmake",
-                "VCPKG_INSTALLED_DIR": "${sourceDir}/build/x86_64-linux-clang/vcpkg_installed"
+                "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/toolchains/x86_64-linux-clang.cmake"
             }
         },
         {

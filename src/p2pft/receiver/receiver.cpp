@@ -7,7 +7,7 @@
 #include <boost/asio.hpp>
 #include <boost/asio/io_context.hpp>
 
-#include <FileTransferProposalResp.pb.h>
+#include <FileTransferProposalReq.pb.h>
 
 namespace p2pft
 {
