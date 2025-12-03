@@ -26,9 +26,6 @@ public:
 
 private:
     cli::ReceiverArgs args_;
-    IoContextPtr      ioContext_;
-    TcpAcceptorPtr    acceptor_;
-    SessionPtr        session_;
 };
 
 }  // namespace p2pft
