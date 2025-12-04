@@ -1,7 +1,5 @@
 #include "receiver.hpp"
 
-#include <memory>
-
 #include <boost/asio.hpp>
 #include <boost/asio/io_context.hpp>
 
@@ -12,7 +10,6 @@ namespace p2pft
 
 Receiver::Receiver(cli::ReceiverArgs args)
     : args_{ args }
-    , ioContext_{ std::make_shared<boost::asio::io_context>() }
 {
 }
 

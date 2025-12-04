@@ -1,6 +1,7 @@
 include("${CMAKE_SOURCE_DIR}/cmake/build_proto.cmake")
 
 add_subdirectory(lib.cli)
+add_subdirectory(lib.comms)
 
 add_executable(p2p_ft main.cpp p2pft/receiver/receiver.cpp)
 
