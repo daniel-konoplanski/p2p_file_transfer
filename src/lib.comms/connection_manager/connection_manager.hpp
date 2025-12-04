@@ -1,26 +1,28 @@
 #pragma once
 
+#include <expected>
 #include <string_view>
 #include <boost/asio/ip/address_v4.hpp>
+#include <boost/system/detail/error_code.hpp>
 #include "lib.comms/Session.hpp"
 
 namespace p2p_ft::comms
 {
 
+using SessionOrError = std::expected<SessionPtr, boost::system::error_code>;
+
 class ConnectionManager
 {
 public:
-    ConnectionManager(IoContextPtr io, Port port, std::string_view address);
     ConnectionManager(IoContextPtr io, Port port);
 
 public:
-    SessionPtr listen();
-    SessionPtr connect();
+    SessionOrError listen();
+    SessionOrError connect(std::string_view address);
 
 private:
     IoContextPtr io_;
     Port port_;
-    std::string_view address_{};
 };
 
 }  // namespace p2p_ft::comms

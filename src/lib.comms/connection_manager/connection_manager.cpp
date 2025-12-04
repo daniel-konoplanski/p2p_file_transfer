@@ -1,10 +1,13 @@
 #include "connection_manager.hpp"
 
+#include <expected>
 #include <memory>
 #include <print>
 #include <system_error>
 #include <utility>
 
+#include <boost/asio/connect.hpp>
+#include <boost/asio/ip/address_v4.hpp>
 #include <boost/system/detail/error_code.hpp>
 
 #include "lib.comms/Session.hpp"
@@ -14,36 +17,39 @@ namespace p2p_ft::comms
 
 using boost::asio::ip::tcp;
 
-ConnectionManager::ConnectionManager(IoContextPtr io, Port port, std::string_view address)
+ConnectionManager::ConnectionManager(IoContextPtr io, Port port)
     : io_{ std::move(io) }
     , port_{ port }
-    , address_{ address }
 {
 }
 
-ConnectionManager::ConnectionManager(IoContextPtr io, Port port)
-    : ConnectionManager(io, port, {})
-{
-}
-
-SessionPtr ConnectionManager::listen()
+SessionOrError ConnectionManager::listen()
 {
     auto endpoint = tcp::endpoint(tcp::v4(), port_);
     auto acceptor = tcp::acceptor(*io_, endpoint);
 
     boost::system::error_code ec{};
 
-    std::println("Listening on port {}...", port_);
-
     auto socket = acceptor.accept(ec);
 
-    if (!ec)
-    {
-        std::println("Failed to handle incoming connection: {}", ec.message());
-        return nullptr;
-    }
+    if (!ec) return nullptr;
 
     acceptor.close();
+
+    return std::make_shared<Session>(std::move(socket));
+}
+
+SessionOrError ConnectionManager::connect(std::string_view address)
+{
+    auto addressV4 = boost::asio::ip::make_address_v4(address);
+    auto endpoint = tcp::endpoint(addressV4, port_);
+
+    boost::system::error_code ec{};
+
+    tcp::socket socket(*io_);
+
+    if (socket.connect(endpoint, ec))
+        return std::unexpected(ec);
 
     return std::make_shared<Session>(std::move(socket));
 }
