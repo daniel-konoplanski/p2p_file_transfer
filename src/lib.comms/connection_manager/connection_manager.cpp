@@ -43,16 +43,15 @@ SessionOrError ConnectionManager::listen()
 SessionOrError ConnectionManager::connect(std::string_view address)
 {
     auto addressV4 = boost::asio::ip::make_address_v4(address);
-    auto endpoint = tcp::endpoint(addressV4, port_);
+    auto endpoint  = tcp::endpoint(addressV4, port_);
 
     boost::system::error_code ec{};
 
     tcp::socket socket(*io_);
 
-    if (socket.connect(endpoint, ec))
-        return std::unexpected(ec);
+    if (socket.connect(endpoint, ec)) return std::unexpected(ec);
 
     return std::make_shared<Session>(std::make_unique<TcpSocket>(std::move(socket)));
 }
 
-}  // namespace p2p_ft::comms
+}  // namespace p2pft::comms

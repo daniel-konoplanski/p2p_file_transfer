@@ -35,7 +35,7 @@ void Sender::run()
         return;
     }
 
-    auto sessionPtr = *maybeSession;
+    auto sessionPtr     = *maybeSession;
     auto remoteEndpoint = sessionPtr->socketPtr_->remote_endpoint();
 
     std::println(

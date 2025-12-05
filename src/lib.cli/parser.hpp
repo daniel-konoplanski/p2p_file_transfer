@@ -12,13 +12,13 @@ struct SenderArgs
 {
     std::string address;
     std::string path;
-    uint16_t port;
+    uint16_t    port;
 };
 
 struct ReceiverArgs
 {
     std::string outDir;
-    uint16_t port;
+    uint16_t    port;
 };
 
 using CliArgs = std::variant<SenderArgs, ReceiverArgs, std::nullopt_t>;

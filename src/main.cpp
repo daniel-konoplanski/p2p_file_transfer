@@ -26,5 +26,5 @@ int main(int argc, char* argv[])
     app->run();
 
     return ExitCodes::SUCCESS;
-    //probably do return app->run()
+    // probably do return app->run()
 }

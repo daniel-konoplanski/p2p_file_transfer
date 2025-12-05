@@ -14,7 +14,7 @@ CliArgs Parser::parse(int argc, char* argv[])
 
     std::string address;
     std::string path;
-    uint16_t port = 52000;
+    uint16_t    port = 52000;
 
     auto send = app.add_subcommand("send", "Send files to a receiver");
     send->add_option("-t,--target", address, "Address of the receiver")->required();
@@ -35,7 +35,8 @@ CliArgs Parser::parse(int argc, char* argv[])
     }
 
     CliArgs cliArgs{};
-    cliArgs = send->parsed() ? cliArgs = SenderArgs{ address, path, port } : cliArgs = ReceiverArgs{ path, port };
+    cliArgs = send->parsed() ? cliArgs = SenderArgs{ address, path, port }
+                             : cliArgs = ReceiverArgs{ path, port };
 
     return cliArgs;
 }
