@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 
@@ -12,17 +10,14 @@
 namespace p2pft
 {
 
-using IoContext      = boost::asio::io_context;
-using IoContextPtr   = std::shared_ptr<IoContext>;
-using TcpAcceptor    = boost::asio::ip::tcp::acceptor;
-using TcpAcceptorPtr = std::shared_ptr<TcpAcceptor>;
-
 class Receiver : public IApplication
 {
 public:
     Receiver(cli::ReceiverArgs args);
-    void run() override;
     virtual ~Receiver() = default;
+
+public:
+    void run() override;
 
 private:
     cli::ReceiverArgs args_;

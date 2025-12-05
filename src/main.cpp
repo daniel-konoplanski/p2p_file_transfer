@@ -4,7 +4,7 @@
 #include "lib.cli/parser.hpp"
 
 #include "p2pft/application.hpp"
-#include "p2pft/startup/app_runner.hpp"
+#include "p2pft/startup/startup.hpp"
 
 enum ExitCodes : int
 {
