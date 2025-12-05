@@ -23,7 +23,8 @@ int main(int argc, char* argv[])
         return ExitCodes::STARTUP_FAILURE;
     }
 
-    app->start();
+    app->run();
 
     return ExitCodes::SUCCESS;
+    //probably do return app->run()
 }

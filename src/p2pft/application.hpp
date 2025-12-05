@@ -6,8 +6,8 @@ namespace p2pft
 class IApplication
 {
 public:
-    virtual void start()    = 0;
     virtual ~IApplication() = default;
+    virtual void run()      = 0;
 };
 
 }  // namespace p2pft

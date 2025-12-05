@@ -5,13 +5,14 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 
-namespace p2p_ft::comms
+namespace p2pft::comms
 {
 
-using IoContextPtr = std::shared_ptr<boost::asio::io_context>;
-using TcpSocket    = std::shared_ptr<boost::asio::ip::tcp::socket>;
-using IoContextPtr = std::shared_ptr<boost::asio::io_context>;
 using Port         = uint16_t;
+using TcpSocket    = boost::asio::ip::tcp::socket;
+using TcpSocketPtr = std::shared_ptr<TcpSocket>;
+using IoContext    = boost::asio::io_context;
+using IoContextPtr = std::shared_ptr<IoContext>;
 
 struct Session
 {
@@ -20,4 +21,4 @@ struct Session
 
 using SessionPtr = std::shared_ptr<Session>;
 
-}  // namespace p2p_ft::comms
+}  // namespace p2pft::comms

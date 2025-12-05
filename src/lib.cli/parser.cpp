@@ -12,12 +12,12 @@ CliArgs Parser::parse(int argc, char* argv[])
 {
     CLI::App app{ "P2P File Transfer" };
 
-    std::string dest;
+    std::string address;
     std::string path;
     uint16_t port = 52000;
 
     auto send = app.add_subcommand("send", "Send files to a receiver");
-    send->add_option("-t,--target", dest, "Address of the receiver")->required();
+    send->add_option("-t,--target", address, "Address of the receiver")->required();
     send->add_option("-i,--input", path, "File to transfer")->required();
     send->add_option("-p,--port", port, "Port number");
 
@@ -35,7 +35,7 @@ CliArgs Parser::parse(int argc, char* argv[])
     }
 
     CliArgs cliArgs{};
-    cliArgs = send->parsed() ? cliArgs = SenderArgs{ dest, path, port } : cliArgs = ReceiverArgs{ path, port };
+    cliArgs = send->parsed() ? cliArgs = SenderArgs{ address, path, port } : cliArgs = ReceiverArgs{ path, port };
 
     return cliArgs;
 }

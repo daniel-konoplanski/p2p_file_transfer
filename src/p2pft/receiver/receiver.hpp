@@ -21,7 +21,7 @@ class Receiver : public IApplication
 {
 public:
     Receiver(cli::ReceiverArgs args);
-    void start() override;
+    void run() override;
     virtual ~Receiver() = default;
 
 private:

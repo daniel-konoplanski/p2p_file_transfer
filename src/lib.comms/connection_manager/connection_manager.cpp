@@ -1,5 +1,6 @@
 #include "connection_manager.hpp"
 
+#include <algorithm>
 #include <expected>
 #include <memory>
 #include <print>
@@ -12,7 +13,7 @@
 
 #include "lib.comms/Session.hpp"
 
-namespace p2p_ft::comms
+namespace p2pft::comms
 {
 
 using boost::asio::ip::tcp;
@@ -36,7 +37,7 @@ SessionOrError ConnectionManager::listen()
 
     acceptor.close();
 
-    return std::make_shared<Session>(std::move(socket));
+    return std::make_shared<Session>(std::make_unique<TcpSocket>(std::move(socket)));
 }
 
 SessionOrError ConnectionManager::connect(std::string_view address)
@@ -51,7 +52,7 @@ SessionOrError ConnectionManager::connect(std::string_view address)
     if (socket.connect(endpoint, ec))
         return std::unexpected(ec);
 
-    return std::make_shared<Session>(std::move(socket));
+    return std::make_shared<Session>(std::make_unique<TcpSocket>(std::move(socket)));
 }
 
 }  // namespace p2p_ft::comms

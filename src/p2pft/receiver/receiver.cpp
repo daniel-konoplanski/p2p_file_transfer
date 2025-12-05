@@ -13,7 +13,7 @@ Receiver::Receiver(cli::ReceiverArgs args)
 {
 }
 
-void Receiver::start()
+void Receiver::run()
 {
 }
 

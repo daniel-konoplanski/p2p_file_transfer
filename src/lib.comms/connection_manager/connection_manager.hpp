@@ -2,11 +2,13 @@
 
 #include <expected>
 #include <string_view>
+
 #include <boost/asio/ip/address_v4.hpp>
 #include <boost/system/detail/error_code.hpp>
+
 #include "lib.comms/Session.hpp"
 
-namespace p2p_ft::comms
+namespace p2pft::comms
 {
 
 using SessionOrError = std::expected<SessionPtr, boost::system::error_code>;
@@ -22,7 +24,7 @@ public:
 
 private:
     IoContextPtr io_;
-    Port port_;
+    Port         port_;
 };
 
-}  // namespace p2p_ft::comms
+}  // namespace p2pft::comms

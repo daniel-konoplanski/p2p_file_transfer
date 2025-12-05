@@ -10,7 +10,7 @@ namespace cli
 
 struct SenderArgs
 {
-    std::string dest;
+    std::string address;
     std::string path;
     uint16_t port;
 };
