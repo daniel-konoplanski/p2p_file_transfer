@@ -9,17 +9,25 @@
 enum ExitCodes : int
 {
     SUCCESS,
+    INVALID_ARGUMENTS,
     STARTUP_FAILURE
 };
 
 int main(int argc, char* argv[])
 {
     auto args = cli::Parser::parse(argc, argv);
+
+    if (std::holds_alternative<std::nullopt_t>(args))
+    {
+        std::println("Failed to parse the arguments");
+        return ExitCodes::INVALID_ARGUMENTS;
+    }
+
     auto app  = std::visit(p2pft::startup::AppVisitor{}, args);
 
     if (!app)
     {
-        std::print("Failed to start the application!");
+        std::println("Failed to start the application");
         return ExitCodes::STARTUP_FAILURE;
     }
 
