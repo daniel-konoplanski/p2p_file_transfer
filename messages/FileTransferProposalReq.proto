@@ -4,10 +4,10 @@ package p2pft.proto;
 message FileInfo
 {
     string name = 1;
-    uint64 size = 2; // in KB
+    uint64 size = 2; // in Bytes
 }
 
 message FileTransferProposalReq
 {
-    repeated FileInfo files = 1;
+    FileInfo files = 1;
 }
