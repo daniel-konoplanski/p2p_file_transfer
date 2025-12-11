@@ -6,7 +6,7 @@
 #include <boost/asio/ip/address_v4.hpp>
 #include <boost/system/detail/error_code.hpp>
 
-#include "lib.comms/Session.hpp"
+#include "lib.comms/session.hpp"
 
 namespace p2pft::comms
 {

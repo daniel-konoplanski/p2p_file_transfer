@@ -1,10 +1,11 @@
 #include "message_sender.hpp"
 
 #include <cstddef>
+#include <cstdint>
 
 #include <boost/asio/registered_buffer.hpp>
 
-#include "lib.comms/Session.hpp"
+#include "lib.comms/session.hpp"
 
 namespace p2pft::comms
 {
@@ -16,8 +17,8 @@ MessageSender::MessageSender(SessionPtr session)
 
 void MessageSender::send(const google::protobuf::Message& message, SenderCallback callback)
 {
-    size_t msgSize = message.ByteSizeLong();
-    uint32_t sizeHeader = static_cast<uint32_t>(msgSize);
+    uint64_t msgSize = message.ByteSizeLong();
+    uint64_t sizeHeader = static_cast<uint64_t>(msgSize);
 
     buffer_.clear();
     buffer_.resize(sizeof(sizeHeader) + msgSize);

@@ -2,20 +2,21 @@
 
 #include <cstddef>
 
-#include "lib.comms/Session.hpp"
+#include "lib.comms/i_sender.hpp"
+#include "lib.comms/session.hpp"
 
 namespace p2pft::comms
 {
 
 using SenderCallback = std::function<void(const std::error_code&, size_t)>;
 
-class MessageSender
+class MessageSender : public IMessageSender
 {
 public:
     MessageSender(SessionPtr session);
 
 public:
-    void send(const google::protobuf::Message& message, const SenderCallback& callback);
+    void send(const google::protobuf::Message& message, SenderCallback callback) override;
 
 private:
     SessionPtr             session_;
