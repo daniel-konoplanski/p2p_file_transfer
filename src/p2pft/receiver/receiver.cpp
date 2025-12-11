@@ -1,5 +1,6 @@
 #include "receiver.hpp"
 
+#include <cstdio>
 #include <print>
 
 #include <boost/asio.hpp>
@@ -33,12 +34,23 @@ void Receiver::run()
     }
 
     auto sessionPtr     = *maybeSession;
+
+    if (!sessionPtr)
+    {
+        std::println(stderr, "sessionPtr is nullptr!!!!");
+        return;
+    }
+
     auto remoteEndpoint = sessionPtr->socketPtr_->remote_endpoint();
 
     std::println(
         "Successfully connected to sender with address {}:{}",
         remoteEndpoint.address().to_string(),
         remoteEndpoint.port());
+
+    auto work_guard = boost::asio::make_work_guard(*io);
+
+    io->run();
 }
 
 }  // namespace p2pft

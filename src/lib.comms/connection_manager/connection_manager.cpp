@@ -33,7 +33,7 @@ SessionOrError ConnectionManager::listen()
 
     auto socket = acceptor.accept(ec);
 
-    if (!ec) return nullptr;
+    if (ec) return std::unexpected(ec);
 
     acceptor.close();
 

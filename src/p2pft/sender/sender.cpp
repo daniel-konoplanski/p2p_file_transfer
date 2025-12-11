@@ -84,7 +84,7 @@ void Sender::run()
     std::unique_ptr<comms::IMessageSender> messageSeder = std::make_unique<comms::MessageSender>(sessionPtr);
 
     messageSeder->send(req, [](const auto& errorCode, auto msgSize) {
-        if (!errorCode)
+        if (errorCode)
         {
             std::println("Error during message sending: {}", errorCode.message());
             return;
@@ -92,6 +92,10 @@ void Sender::run()
 
         std::println("Successfully send message of size {}", msgSize);
     });
+
+    auto work_guard = boost::asio::make_work_guard(*io);
+
+    io->run();
 }
 
 }  // namespace p2pft
