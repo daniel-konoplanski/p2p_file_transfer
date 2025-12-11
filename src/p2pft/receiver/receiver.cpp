@@ -21,6 +21,8 @@ void Receiver::run()
 {
     auto io = std::make_shared<boost::asio::io_context>();
 
+    std::println("Listening on port {} for incomming requests", args_.port);
+
     auto connectionMgrPtr = std::make_unique<comms::ConnectionManager>(io, args_.port);
     auto maybeSession     = connectionMgrPtr->listen();
 

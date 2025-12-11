@@ -11,6 +11,8 @@
 #include "lib.cli/parser.hpp"
 
 #include "lib.comms/connection_manager/connection_manager.hpp"
+#include "lib.comms/i_sender.hpp"
+#include "lib.comms/message_sender/message_sender.hpp"
 #include "proto/FileTransferProposalReq.pb.h"
 
 namespace p2pft
@@ -51,7 +53,7 @@ void Sender::run()
     std::error_code ec;
     auto doesFileExist = std::filesystem::exists(filePath, ec);
 
-    if (!ec)
+    if (ec)
     {
         std::println(stderr, "Failed to read file {}: {}", filePath.string(), ec.message());
         return; // TODO: return an error code;
@@ -65,7 +67,7 @@ void Sender::run()
 
     auto fileSize = std::filesystem::file_size(filePath, ec);
 
-    if (!ec)
+    if (ec)
     {
         std::println(stderr, "Could not read file size: {}", filePath.string());
         return;
@@ -78,6 +80,18 @@ void Sender::run()
 
     f->set_name(filePath.filename().string());
     f->set_size(fileSize);
+
+    std::unique_ptr<comms::IMessageSender> messageSeder = std::make_unique<comms::MessageSender>(sessionPtr);
+
+    messageSeder->send(req, [](const auto& errorCode, auto msgSize) {
+        if (!errorCode)
+        {
+            std::println("Error during message sending: {}", errorCode.message());
+            return;
+        }
+
+        std::println("Successfully send message of size {}", msgSize);
+    });
 }
 
 }  // namespace p2pft

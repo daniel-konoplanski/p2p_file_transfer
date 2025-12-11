@@ -14,6 +14,7 @@ class MessageSender : public IMessageSender
 {
 public:
     MessageSender(SessionPtr session);
+    virtual ~MessageSender() = default;
 
 public:
     void send(const google::protobuf::Message& message, SenderCallback callback) override;
