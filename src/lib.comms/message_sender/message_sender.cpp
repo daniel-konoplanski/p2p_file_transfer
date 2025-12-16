@@ -1,9 +1,10 @@
 #include "message_sender.hpp"
 
-#include <cstddef>
 #include <cstdint>
 
 #include <boost/asio/registered_buffer.hpp>
+#include <google/protobuf/message.h>
+#include <google/protobuf/any.pb.h>
 
 #include "lib.comms/session.hpp"
 
@@ -17,15 +18,18 @@ MessageSender::MessageSender(SessionPtr session)
 
 void MessageSender::send(const google::protobuf::Message& message, SenderCallback callback)
 {
-    uint64_t msgSize = message.ByteSizeLong();
-    uint64_t sizeHeader = static_cast<uint64_t>(msgSize);
+    google::protobuf::Any any;
+    any.PackFrom(message);
+
+    uint64_t anySize = any.ByteSizeLong();
+    uint64_t sizeHeader = static_cast<uint64_t>(anySize);
 
     buffer_.clear();
-    buffer_.resize(sizeof(sizeHeader) + msgSize);
+    buffer_.resize(sizeof(sizeHeader) + anySize);
 
     std::memcpy(buffer_.data(), &sizeHeader, sizeof(sizeHeader));
 
-    message.SerializeToArray(buffer_.data() + sizeof(sizeHeader), static_cast<int>(msgSize));
+    message.SerializeToArray(buffer_.data() + sizeof(sizeHeader), static_cast<int>(anySize));
 
     auto& socketPtr = session_->socketPtr_;
 
