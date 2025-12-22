@@ -53,7 +53,6 @@ void Receiver::run()
         remoteEndpoint.address().to_string(),
         remoteEndpoint.port());
 
-    // TODO: change to interface
     std::unique_ptr<comms::IMessageReceiver> messageReceiver = std::make_unique<comms::MessageReceiver>(sessionPtr);
     messageReceiver->subscribe([](const std::error_code& ec, std::unique_ptr<google::protobuf::Any>)  {
         if (ec)
