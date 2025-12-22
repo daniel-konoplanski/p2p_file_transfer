@@ -7,18 +7,16 @@
 #include <google/protobuf/message.h>
 
 #include "lib.comms/session.hpp"
+#include "lib.comms/i_receiver.hpp"
 
 namespace p2pft::comms
 {
 
-using ReceiverCallback =
-    std::function<void(const std::error_code&, std::unique_ptr<google::protobuf::Any>)>;
-
-class MessageReceiver
+class MessageReceiver : public IMessageReceiver
 {
 public:
     MessageReceiver(SessionPtr session);
-    void subscribe(ReceiverCallback callback);
+    void subscribe(ReceiverCallback callback) override;
 
 private:
     void handleMsg(std::error_code errorCode, size_t size);

@@ -6,7 +6,6 @@
 #include <print>
 #include <utility>
 
-#include <google/protobuf/any.pb.h>
 #include <google/protobuf/message.h>
 
 #include "lib.comms/session.hpp"
@@ -23,9 +22,12 @@ void MessageReceiver::subscribe(ReceiverCallback callback)
 {
     callback_ = std::move(callback);
 
+    buffer_.resize(8192);
+
     auto& socketPtr = session_->socketPtr_;
 
-    auto processMsg = [this](const std::error_code& ec, size_t size) {
+    auto processMsg = [this](const std::error_code& ec, uint64_t size) {
+        std::println("Received message of size {}", size);
         handleMsg(ec, size);
     };
 
@@ -42,11 +44,13 @@ void MessageReceiver::handleMsg(std::error_code ec, size_t)
         return;
     }
 
-    uint64_t msgSize;
-    std::memcpy(&msgSize, buffer_.data(), sizeof(uint64_t));
+    uint64_t anySize;
+    std::memcpy(&anySize, buffer_.data(), sizeof(uint64_t));
+
+    std::println("Received a message of size {}", anySize);
 
     auto anyPtr = std::make_unique<google::protobuf::Any>();
-    anyPtr->ParseFromArray(buffer_.data() + sizeof(uint64_t), static_cast<int>(msgSize));
+    anyPtr->ParseFromArray(buffer_.data() + sizeof(uint64_t), static_cast<int>(anySize));
 
     callback_(ec, std::move(anyPtr));
 }

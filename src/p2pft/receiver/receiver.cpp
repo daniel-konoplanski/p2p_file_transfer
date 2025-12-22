@@ -1,14 +1,19 @@
 #include "receiver.hpp"
 
 #include <cstdio>
+#include <memory>
 #include <print>
+#include <system_error>
 
 #include <boost/asio.hpp>
 #include <boost/asio/io_context.hpp>
+#include <google/protobuf/any.pb.h>
 
 #include <proto/FileTransferProposalReq.pb.h>
 
 #include "lib.comms/connection_manager/connection_manager.hpp"
+#include "lib.comms/i_receiver.hpp"
+#include "lib.comms/message_receiver/message_receiver.hpp"
 
 namespace p2pft
 {
@@ -47,6 +52,18 @@ void Receiver::run()
         "Successfully connected to sender with address {}:{}",
         remoteEndpoint.address().to_string(),
         remoteEndpoint.port());
+
+    // TODO: change to interface
+    std::unique_ptr<comms::IMessageReceiver> messageReceiver = std::make_unique<comms::MessageReceiver>(sessionPtr);
+    messageReceiver->subscribe([](const std::error_code& ec, std::unique_ptr<google::protobuf::Any>)  {
+        if (ec)
+        {
+            std::println("Message recival failed: {}", ec.message());
+            return;
+        }
+
+        std::println("Successfully received a message");
+    });
 
     auto work_guard = boost::asio::make_work_guard(*io);
 
