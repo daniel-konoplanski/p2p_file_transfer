@@ -27,7 +27,7 @@ void MessageReceiver::subscribe(ReceiverCallback callback)
     auto& socketPtr = session_->socketPtr_;
 
     auto processMsg = [this](const std::error_code& ec, uint64_t size) {
-        std::println("Received message of size {}", size);
+        std::println("Received a message of size {}", size);
         handleMsg(ec, size);
     };
 

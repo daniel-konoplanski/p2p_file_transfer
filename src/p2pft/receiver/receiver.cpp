@@ -1,5 +1,6 @@
 #include "receiver.hpp"
 
+#include <algorithm>
 #include <cstdio>
 #include <memory>
 #include <print>
@@ -54,7 +55,7 @@ void Receiver::run()
         remoteEndpoint.port());
 
     std::unique_ptr<comms::IMessageReceiver> messageReceiver = std::make_unique<comms::MessageReceiver>(sessionPtr);
-    messageReceiver->subscribe([](const std::error_code& ec, std::unique_ptr<google::protobuf::Any>)  {
+    messageReceiver->subscribe([this](const std::error_code& ec, std::unique_ptr<google::protobuf::Any> anyPtr)  {
         if (ec)
         {
             std::println("Message recival failed: {}", ec.message());
@@ -62,11 +63,48 @@ void Receiver::run()
         }
 
         std::println("Successfully received a message");
+        handleMessage(std::move(anyPtr));
     });
 
     auto work_guard = boost::asio::make_work_guard(*io);
 
     io->run();
+}
+
+void Receiver::handleMessage(std::unique_ptr<google::protobuf::Any> anyPtr)
+{
+    if (anyPtr->Is<proto::FileTransferProposalReq>())
+    {
+        std::println("Got FileTransferProposalReq");
+        handleFileTransferProposalReq(std::move(anyPtr));
+    }
+    else
+    {
+        std::println("NOT FileTransferProposalReq!!!");
+    }
+}
+
+void Receiver::handleFileTransferProposalReq(std::unique_ptr<google::protobuf::Any> anyPtr)
+{
+    proto::FileTransferProposalReq req;
+
+    auto unpackResult = anyPtr->UnpackTo(&req);
+
+    if (!unpackResult)
+    {
+        std::println(stderr, "Failed to unpack message to FileTransferProposalReq");
+        return;
+    }
+
+    auto fileSize = req.files().size();
+    auto fileName = req.files().name();
+
+    std::println(
+        "Received file transfer proposal\n"
+        "File size: {}"
+        "File name: {}",
+        fileSize,
+        fileName);
 }
 
 }  // namespace p2pft

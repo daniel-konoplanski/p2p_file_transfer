@@ -3,6 +3,8 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 
+#include <google/protobuf/any.pb.h>
+
 #include "lib.cli/parser.hpp"
 
 #include "p2pft/application.hpp"
@@ -18,6 +20,10 @@ public:
 
 public:
     void run() override;
+
+private:
+    void handleMessage(std::unique_ptr<google::protobuf::Any> anyPtr);
+    void handleFileTransferProposalReq(std::unique_ptr<google::protobuf::Any> anyPtr);
 
 private:
     cli::ReceiverArgs args_;
