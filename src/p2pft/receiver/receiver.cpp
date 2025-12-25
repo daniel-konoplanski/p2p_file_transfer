@@ -8,16 +8,36 @@
 
 #include <boost/asio.hpp>
 #include <boost/asio/io_context.hpp>
+
 #include <google/protobuf/any.pb.h>
 
 #include <proto/FileTransferProposalReq.pb.h>
+#include <proto/FileTransferProposalResp.pb.h>
 
 #include "lib.comms/connection_manager/connection_manager.hpp"
 #include "lib.comms/i_receiver.hpp"
 #include "lib.comms/message_receiver/message_receiver.hpp"
+#include "lib.comms/message_sender/message_sender.hpp"
+#include "proto/Result.pb.h"
 
 namespace p2pft
 {
+
+namespace
+{
+
+bool getUserConfirmation()
+{
+    std::string response;
+    std::println("Accept the transfer? (yes/no): ");
+    std::getline(std::cin, response);
+
+    std::ranges::transform(response, response.begin(), ::tolower);
+
+    return response == "yes" || response == "y";
+}
+
+}  // namespace
 
 Receiver::Receiver(cli::ReceiverArgs args)
     : args_{ args }
@@ -39,7 +59,7 @@ void Receiver::run()
         return;
     }
 
-    auto sessionPtr     = *maybeSession;
+    auto sessionPtr = *maybeSession;
 
     if (!sessionPtr)
     {
@@ -54,17 +74,19 @@ void Receiver::run()
         remoteEndpoint.address().to_string(),
         remoteEndpoint.port());
 
-    std::unique_ptr<comms::IMessageReceiver> messageReceiver = std::make_unique<comms::MessageReceiver>(sessionPtr);
-    messageReceiver->subscribe([this](const std::error_code& ec, std::unique_ptr<google::protobuf::Any> anyPtr)  {
-        if (ec)
-        {
-            std::println("Message recival failed: {}", ec.message());
-            return;
-        }
+    messageSender_ = std::make_unique<comms::MessageSender>(sessionPtr);
+    messageReceiver_ = std::make_unique<comms::MessageReceiver>(sessionPtr);
 
-        std::println("Successfully received a message");
-        handleMessage(std::move(anyPtr));
-    });
+    messageReceiver_->subscribe(
+        [this](const std::error_code& ec, std::unique_ptr<google::protobuf::Any> anyPtr) {
+            if (ec)
+            {
+                std::println("Message recival failed: {}", ec.message());
+                return;
+            }
+
+            handleMessage(std::move(anyPtr));
+        });
 
     auto work_guard = boost::asio::make_work_guard(*io);
 
@@ -75,12 +97,7 @@ void Receiver::handleMessage(std::unique_ptr<google::protobuf::Any> anyPtr)
 {
     if (anyPtr->Is<proto::FileTransferProposalReq>())
     {
-        std::println("Got FileTransferProposalReq");
         handleFileTransferProposalReq(std::move(anyPtr));
-    }
-    else
-    {
-        std::println("NOT FileTransferProposalReq!!!");
     }
 }
 
@@ -101,10 +118,26 @@ void Receiver::handleFileTransferProposalReq(std::unique_ptr<google::protobuf::A
 
     std::println(
         "Received file transfer proposal\n"
-        "File size: {}"
-        "File name: {}",
+        "File size: {}\n"
+        "File name: {}\n",
         fileSize,
         fileName);
+
+    sendFileTransferProposalResp();
+}
+
+void Receiver::sendFileTransferProposalResp()
+{
+    using enum proto::Result;
+    proto::FileTransferProposalResp resp;
+
+    proto::Result reqResult = getUserConfirmation() ? ACCEPTED : REJECTED;
+
+    resp.set_result(reqResult);
+
+    messageSender_->send(resp, [](const std::error_code& ec, size_t) {
+        std::println("Send the FileTransferProposalResp with status {}", ec.message());
+    });
 }
 
 }  // namespace p2pft

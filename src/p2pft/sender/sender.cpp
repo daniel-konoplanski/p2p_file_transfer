@@ -81,9 +81,9 @@ void Sender::run()
     f->set_name(filePath.filename().string());
     f->set_size(fileSize);
 
-    std::unique_ptr<comms::IMessageSender> messageSeder = std::make_unique<comms::MessageSender>(sessionPtr);
+    std::unique_ptr<comms::IMessageSender> messageSender = std::make_unique<comms::MessageSender>(sessionPtr);
 
-    messageSeder->send(req, [](const auto& errorCode, auto msgSize) {
+    messageSender->send(req, [](const auto& errorCode, auto msgSize) {
         if (errorCode)
         {
             std::println("Error during message sending: {}", errorCode.message());

@@ -29,7 +29,7 @@ void MessageSender::send(const google::protobuf::Message& message, SenderCallbac
 
     std::memcpy(buffer_.data(), &sizeHeader, sizeof(sizeHeader));
 
-    message.SerializeToArray(buffer_.data() + sizeof(sizeHeader), static_cast<int>(anySize));
+    any.SerializeToArray(buffer_.data() + sizeof(sizeHeader), static_cast<int>(anySize));
 
     auto& socketPtr = session_->socketPtr_;
 

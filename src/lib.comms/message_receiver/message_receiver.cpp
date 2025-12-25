@@ -1,6 +1,5 @@
 #include "lib.comms/message_receiver/message_receiver.hpp"
 
-#include <algorithm>
 #include <cstddef>
 #include <memory>
 #include <print>

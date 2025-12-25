@@ -9,6 +9,9 @@
 
 #include "p2pft/application.hpp"
 
+#include "lib.comms/i_receiver.hpp"
+#include "lib.comms/i_sender.hpp"
+
 namespace p2pft
 {
 
@@ -24,9 +27,12 @@ public:
 private:
     void handleMessage(std::unique_ptr<google::protobuf::Any> anyPtr);
     void handleFileTransferProposalReq(std::unique_ptr<google::protobuf::Any> anyPtr);
+    void sendFileTransferProposalResp();
 
 private:
-    cli::ReceiverArgs args_;
+    cli::ReceiverArgs                        args_;
+    std::unique_ptr<comms::IMessageSender>   messageSender_;
+    std::unique_ptr<comms::IMessageReceiver> messageReceiver_;
 };
 
 }  // namespace p2pft
