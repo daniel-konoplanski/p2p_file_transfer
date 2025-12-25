@@ -1,8 +1,13 @@
 #pragma once
 
+#include <memory>
+
 #include "lib.cli/parser.hpp"
 
 #include "p2pft/application.hpp"
+
+#include "lib.comms/i_receiver.hpp"
+#include "lib.comms/i_sender.hpp"
 
 namespace p2pft
 {
@@ -17,7 +22,13 @@ public:
     void run() override;
 
 private:
-    cli::SenderArgs args_;
+    void handleMessage(std::unique_ptr<google::protobuf::Any> anyPtr);
+    void handleFileTransferProposalResp(std::unique_ptr<google::protobuf::Any> anyPtr);
+
+private:
+    cli::SenderArgs                          args_;
+    std::unique_ptr<comms::IMessageSender>   messageSender_;
+    std::unique_ptr<comms::IMessageReceiver> messageReceiver_;
 };
 
 }  // namespace p2pft

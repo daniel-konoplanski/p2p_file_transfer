@@ -8,12 +8,17 @@
 
 #include <boost/asio/io_context.hpp>
 
+#include <proto/FileTransferProposalReq.pb.h>
+#include <proto/FileTransferProposalResp.pb.h>
+
 #include "lib.cli/parser.hpp"
 
 #include "lib.comms/connection_manager/connection_manager.hpp"
+#include "lib.comms/i_receiver.hpp"
 #include "lib.comms/i_sender.hpp"
+#include "lib.comms/message_receiver/message_receiver.hpp"
 #include "lib.comms/message_sender/message_sender.hpp"
-#include "proto/FileTransferProposalReq.pb.h"
+#include "proto/Result.pb.h"
 
 namespace p2pft
 {
@@ -37,7 +42,7 @@ void Sender::run()
             "Failed to connect to receiver with address {}: {}",
             args_.address,
             maybeSession.error().message());
-        return; // TODO: return an error code;
+        return;  // TODO: return an error code;
     }
 
     auto sessionPtr     = *maybeSession;
@@ -48,15 +53,29 @@ void Sender::run()
         remoteEndpoint.address().to_string(),
         remoteEndpoint.port());
 
+    messageSender_   = std::make_unique<comms::MessageSender>(sessionPtr);
+    messageReceiver_ = std::make_unique<comms::MessageReceiver>(sessionPtr);
+
+    messageReceiver_->subscribe(
+        [this](const std::error_code& ec, std::unique_ptr<google::protobuf::Any> anyPtr) {
+            if (ec)
+            {
+                std::println("Message recival failed: {}", ec.message());
+                return;
+            }
+
+            handleMessage(std::move(anyPtr));
+        });
+
     std::filesystem::path filePath{ args_.path };
 
     std::error_code ec;
-    auto doesFileExist = std::filesystem::exists(filePath, ec);
+    auto            doesFileExist = std::filesystem::exists(filePath, ec);
 
     if (ec)
     {
         std::println(stderr, "Failed to read file {}: {}", filePath.string(), ec.message());
-        return; // TODO: return an error code;
+        return;  // TODO: return an error code;
     }
 
     if (!doesFileExist)
@@ -76,14 +95,12 @@ void Sender::run()
     proto::FileInfo fileInfo;
 
     proto::FileTransferProposalReq req;
-    p2pft::proto::FileInfo* f = req.mutable_files();
+    p2pft::proto::FileInfo*        f = req.mutable_files();
 
     f->set_name(filePath.filename().string());
     f->set_size(fileSize);
 
-    std::unique_ptr<comms::IMessageSender> messageSender = std::make_unique<comms::MessageSender>(sessionPtr);
-
-    messageSender->send(req, [](const auto& errorCode, auto msgSize) {
+    messageSender_->send(req, [](const auto& errorCode, auto msgSize) {
         if (errorCode)
         {
             std::println("Error during message sending: {}", errorCode.message());
@@ -96,6 +113,38 @@ void Sender::run()
     auto work_guard = boost::asio::make_work_guard(*io);
 
     io->run();
+}
+
+void Sender::handleMessage(std::unique_ptr<google::protobuf::Any> anyPtr)
+{
+    if (anyPtr->Is<proto::FileTransferProposalResp>())
+    {
+        handleFileTransferProposalResp(std::move(anyPtr));
+    }
+}
+
+void Sender::handleFileTransferProposalResp(std::unique_ptr<google::protobuf::Any> anyPtr)
+{
+    proto::FileTransferProposalResp resp;
+
+    auto unpackResult = anyPtr->UnpackTo(&resp);
+
+    if (!unpackResult)
+    {
+        std::println(stderr, "Failed to unpack message to FileTransferProposalResp");
+        return;
+    }
+
+    bool result = resp.result() == proto::Result::ACCEPTED ? true : false;
+
+    if (result)
+    {
+        std::println("Receiver accepted the file transfer");
+    }
+    else
+    {
+        std::println("Receiver rejected the file transfer");
+    }
 }
 
 }  // namespace p2pft
