@@ -5,6 +5,7 @@
 #include <memory>
 #include <print>
 #include <system_error>
+#include <utility>
 
 #include <boost/asio.hpp>
 #include <boost/asio/io_context.hpp>
@@ -18,6 +19,7 @@
 #include "lib.comms/i_receiver.hpp"
 #include "lib.comms/message_receiver/message_receiver.hpp"
 #include "lib.comms/message_sender/message_sender.hpp"
+#include "proto/FileChunk.pb.h"
 #include "proto/Result.pb.h"
 
 namespace p2pft
@@ -99,6 +101,10 @@ void Receiver::handleMessage(std::unique_ptr<google::protobuf::Any> anyPtr)
     {
         handleFileTransferProposalReq(std::move(anyPtr));
     }
+    else if (anyPtr->Is<proto::FileChunk>())
+    {
+        handleFileChunk(std::move(anyPtr));
+    }
 }
 
 void Receiver::handleFileTransferProposalReq(std::unique_ptr<google::protobuf::Any> anyPtr)
@@ -124,6 +130,21 @@ void Receiver::handleFileTransferProposalReq(std::unique_ptr<google::protobuf::A
         fileName);
 
     sendFileTransferProposalResp();
+}
+
+void Receiver::handleFileChunk(std::unique_ptr<google::protobuf::Any> anyPtr)
+{
+    proto::FileChunk msg;
+
+    auto unpackResult = anyPtr->UnpackTo(&msg);
+
+    if (!unpackResult)
+    {
+        std::println(stderr, "Failed to unpack message to FileTransferProposalReq");
+        return;
+    }
+
+    // TODO: implement a fileWriter so the chunks can be written
 }
 
 void Receiver::sendFileTransferProposalResp()

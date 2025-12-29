@@ -26,8 +26,9 @@ public:
 
 private:
     void handleMessage(std::unique_ptr<google::protobuf::Any> anyPtr);
-    void handleFileTransferProposalReq(std::unique_ptr<google::protobuf::Any> anyPtr);
     void sendFileTransferProposalResp();
+    void handleFileTransferProposalReq(std::unique_ptr<google::protobuf::Any> anyPtr);
+    void handleFileChunk(std::unique_ptr<google::protobuf::Any> anyPtr);
 
 private:
     cli::ReceiverArgs                        args_;
