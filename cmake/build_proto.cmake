@@ -1,6 +1,6 @@
 set(PROTO_FILES
-  ${CMAKE_SOURCE_DIR}/messages/FileTransferComplete.proto
   ${CMAKE_SOURCE_DIR}/messages/FileChunk.proto
+  ${CMAKE_SOURCE_DIR}/messages/FileTransferComplete.proto
   ${CMAKE_SOURCE_DIR}/messages/FileTransferProposalReq.proto
   ${CMAKE_SOURCE_DIR}/messages/FileTransferProposalResp.proto
   ${CMAKE_SOURCE_DIR}/messages/Result.proto

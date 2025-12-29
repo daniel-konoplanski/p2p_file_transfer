@@ -1,15 +1,20 @@
 #include "sender.hpp"
 
+#include <cstdint>
 #include <cstdio>
 #include <filesystem>
+#include <fstream>
+#include <ios>
 #include <memory>
 #include <print>
 #include <system_error>
 
 #include <boost/asio/io_context.hpp>
 
+#include <proto/FileChunk.pb.h>
 #include <proto/FileTransferProposalReq.pb.h>
 #include <proto/FileTransferProposalResp.pb.h>
+#include <proto/Result.pb.h>
 
 #include "lib.cli/parser.hpp"
 
@@ -18,7 +23,6 @@
 #include "lib.comms/i_sender.hpp"
 #include "lib.comms/message_receiver/message_receiver.hpp"
 #include "lib.comms/message_sender/message_sender.hpp"
-#include "proto/Result.pb.h"
 
 namespace p2pft
 {
@@ -144,6 +148,49 @@ void Sender::handleFileTransferProposalResp(std::unique_ptr<google::protobuf::An
     }
 
     std::println("Receiver accepted the request, starting file transfer...");
+    startFileTransfer();
+}
+
+void Sender::startFileTransfer()
+{
+    constexpr uint64_t CHUNK_SIZE = 8192U;
+
+    const auto& filePath = args_.path;
+
+    std::ifstream file(args_.path, std::ios::binary);
+
+    if (!file)
+    {
+        std::println(stderr, "Failed to open file: {}", filePath);
+        return;
+    }
+
+    std::vector<char> chunkBuffer(CHUNK_SIZE);
+
+    uint64_t fileSize    = std::filesystem::file_size(filePath);
+    uint64_t totalChunks = (fileSize + CHUNK_SIZE - 1) / CHUNK_SIZE;
+    uint64_t chunkId     = 1;
+
+    while (file)
+    {
+        file.read(chunkBuffer.data(), CHUNK_SIZE);
+        std::streamsize bytesRead = file.gcount();
+
+        if (!bytesRead) continue;
+
+        proto::FileChunk fileChunkMsg;
+        fileChunkMsg.set_id(chunkId);
+        fileChunkMsg.set_size(bytesRead);
+        fileChunkMsg.set_data(chunkBuffer.data(), bytesRead);
+        fileChunkMsg.set_is_last(totalChunks == chunkId);
+
+        messageSender_->send(fileChunkMsg, [](const std::error_code& ec, size_t) {
+            if (ec)
+            {
+                std::println(stderr, "Message sending failed {}", ec.message());
+            }
+        });
+    }
 }
 
 }  // namespace p2pft

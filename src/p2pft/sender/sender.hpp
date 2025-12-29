@@ -24,6 +24,7 @@ public:
 private:
     void handleMessage(std::unique_ptr<google::protobuf::Any> anyPtr);
     void handleFileTransferProposalResp(std::unique_ptr<google::protobuf::Any> anyPtr);
+    void startFileTransfer();
 
 private:
     cli::SenderArgs                          args_;
