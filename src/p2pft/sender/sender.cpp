@@ -137,14 +137,13 @@ void Sender::handleFileTransferProposalResp(std::unique_ptr<google::protobuf::An
 
     bool result = resp.result() == proto::Result::ACCEPTED ? true : false;
 
-    if (result)
-    {
-        std::println("Receiver accepted the file transfer");
-    }
-    else
+    if (!result)
     {
         std::println("Receiver rejected the file transfer");
+        return;
     }
+
+    std::println("Receiver accepted the request, starting file transfer...");
 }
 
 }  // namespace p2pft
