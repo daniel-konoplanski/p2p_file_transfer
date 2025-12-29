@@ -3,8 +3,9 @@
 #include <cstdint>
 
 #include <boost/asio/registered_buffer.hpp>
-#include <google/protobuf/message.h>
+
 #include <google/protobuf/any.pb.h>
+#include <google/protobuf/message.h>
 
 #include "lib.comms/session.hpp"
 
@@ -21,7 +22,7 @@ void MessageSender::send(const google::protobuf::Message& message, SenderCallbac
     google::protobuf::Any any;
     any.PackFrom(message);
 
-    uint64_t anySize = any.ByteSizeLong();
+    uint64_t anySize    = any.ByteSizeLong();
     uint64_t sizeHeader = static_cast<uint64_t>(anySize);
 
     buffer_.clear();

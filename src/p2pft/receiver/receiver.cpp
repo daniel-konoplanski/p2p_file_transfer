@@ -76,7 +76,7 @@ void Receiver::run()
         remoteEndpoint.address().to_string(),
         remoteEndpoint.port());
 
-    messageSender_ = std::make_unique<comms::MessageSender>(sessionPtr);
+    messageSender_   = std::make_unique<comms::MessageSender>(sessionPtr);
     messageReceiver_ = std::make_unique<comms::MessageReceiver>(sessionPtr);
 
     messageReceiver_->subscribe(

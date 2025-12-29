@@ -6,8 +6,8 @@
 #include <google/protobuf/any.pb.h>
 #include <google/protobuf/message.h>
 
-#include "lib.comms/session.hpp"
 #include "lib.comms/i_receiver.hpp"
+#include "lib.comms/session.hpp"
 
 namespace p2pft::comms
 {
@@ -22,9 +22,9 @@ private:
     void handleMsg(std::error_code errorCode, size_t size);
 
 private:
-    SessionPtr session_;
+    SessionPtr             session_;
     std::vector<std::byte> buffer_;
-    ReceiverCallback callback_;
+    ReceiverCallback       callback_;
 };
 
 }  // namespace p2pft::comms

@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
         return ExitCodes::INVALID_ARGUMENTS;
     }
 
-    auto app  = std::visit(p2pft::startup::AppVisitor{}, args);
+    auto app = std::visit(p2pft::startup::AppVisitor{}, args);
 
     if (!app)
     {
