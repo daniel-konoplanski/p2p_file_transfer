@@ -1,9 +1,12 @@
 #include "receiver.hpp"
 
 #include <algorithm>
+#include <cstdint>
 #include <cstdio>
+#include <filesystem>
 #include <memory>
 #include <print>
+#include <string>
 #include <system_error>
 #include <utility>
 
@@ -19,6 +22,7 @@
 #include "lib.comms/i_receiver.hpp"
 #include "lib.comms/message_receiver/message_receiver.hpp"
 #include "lib.comms/message_sender/message_sender.hpp"
+#include "lib.filesystem/file_writer.hpp"
 #include "proto/FileChunk.pb.h"
 #include "proto/Result.pb.h"
 
@@ -119,15 +123,27 @@ void Receiver::handleFileTransferProposalReq(std::unique_ptr<google::protobuf::A
         return;
     }
 
-    auto fileSize = req.files().size();
-    auto fileName = req.files().name();
+    fileName_      = req.files().name();
+    auto fileSize  = req.files().size();
+    auto spaceInfo = std::filesystem::space(args_.outDir);
+
+    if (spaceInfo.available < fileSize)
+    {
+        std::println(
+            stderr,
+            "Not enough available space in the provided location {}, needed: {}, available: {}",
+            args_.outDir,
+            fileSize,
+            spaceInfo.available);
+        return;
+    }
 
     std::println(
         "Received file transfer proposal\n"
         "File size: {}\n"
         "File name: {}\n",
         fileSize,
-        fileName);
+        fileName_);
 
     sendFileTransferProposalResp();
 }
@@ -144,7 +160,13 @@ void Receiver::handleFileChunk(std::unique_ptr<google::protobuf::Any> anyPtr)
         return;
     }
 
-    // TODO: implement a fileWriter so the chunks can be written
+    const bool  isLast = msg.is_last();
+    const auto& data   = msg.data();
+
+    static auto fileWriter = std::make_unique<files::FileWriter>(args_.outDir, fileName_);
+    fileWriter->write(data, isLast);
+
+    if (isLast) fileWriter = nullptr;
 }
 
 void Receiver::sendFileTransferProposalResp()

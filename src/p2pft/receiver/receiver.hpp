@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 
@@ -34,6 +36,7 @@ private:
     cli::ReceiverArgs                        args_;
     std::unique_ptr<comms::IMessageSender>   messageSender_;
     std::unique_ptr<comms::IMessageReceiver> messageReceiver_;
+    std::string                              fileName_;
 };
 
 }  // namespace p2pft
