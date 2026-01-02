@@ -23,6 +23,7 @@
 #include "lib.comms/i_sender.hpp"
 #include "lib.comms/message_receiver/message_receiver.hpp"
 #include "lib.comms/message_sender/message_sender.hpp"
+#include "proto/FileTransferComplete.pb.h"
 
 namespace p2pft
 {
@@ -34,9 +35,9 @@ Sender::Sender(cli::SenderArgs args)
 
 void Sender::run()
 {
-    auto io = std::make_shared<boost::asio::io_context>();
+    io_ = std::make_shared<boost::asio::io_context>();
 
-    auto connectionMgrPtr = std::make_unique<comms::ConnectionManager>(io, args_.port);
+    auto connectionMgrPtr = std::make_unique<comms::ConnectionManager>(io_, args_.port);
     auto maybeSession     = connectionMgrPtr->connect(args_.address);
 
     if (!maybeSession)
@@ -114,9 +115,9 @@ void Sender::run()
         std::println("Successfully send message of size {}", msgSize);
     });
 
-    auto work_guard = boost::asio::make_work_guard(*io);
+    auto work_guard = boost::asio::make_work_guard(*io_);
 
-    io->run();
+    io_->run();
 }
 
 void Sender::handleMessage(std::unique_ptr<google::protobuf::Any> anyPtr)
@@ -124,6 +125,10 @@ void Sender::handleMessage(std::unique_ptr<google::protobuf::Any> anyPtr)
     if (anyPtr->Is<proto::FileTransferProposalResp>())
     {
         handleFileTransferProposalResp(std::move(anyPtr));
+    }
+    else if(anyPtr->Is<proto::FileTransferComplete>())
+    {
+        handleFileTransferComplete(std::move(anyPtr));
     }
 }
 
@@ -190,7 +195,34 @@ void Sender::startFileTransfer()
                 std::println(stderr, "Message sending failed {}", ec.message());
             }
         });
+
+        ++chunkId;
     }
+
+    std::println("File was sent successfully");
+}
+
+void Sender::handleFileTransferComplete(std::unique_ptr<google::protobuf::Any> anyPtr)
+{
+    proto::FileTransferComplete resp;
+
+    auto unpackResult = anyPtr->UnpackTo(&resp);
+
+    if (!unpackResult)
+    {
+        std::println(stderr, "Failed to unpack message to FileTransferComplete");
+        return;
+    }
+
+    bool result = resp.result() == proto::Result::ACCEPTED ? true : false;
+
+    if (!result)
+    {
+        std::println("Received FileTransferComplete with result FAILIURE");
+        return;
+    }
+
+    std::println("Receiver completed the file transfer");
 }
 
 }  // namespace p2pft

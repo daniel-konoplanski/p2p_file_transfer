@@ -13,6 +13,7 @@
 
 #include "lib.comms/i_receiver.hpp"
 #include "lib.comms/i_sender.hpp"
+#include "proto/Result.pb.h"
 
 namespace p2pft
 {
@@ -31,6 +32,7 @@ private:
     void sendFileTransferProposalResp();
     void handleFileTransferProposalReq(std::unique_ptr<google::protobuf::Any> anyPtr);
     void handleFileChunk(std::unique_ptr<google::protobuf::Any> anyPtr);
+    void sendFileTransferComplete(proto::Result result);
 
 private:
     cli::ReceiverArgs                        args_;

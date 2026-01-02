@@ -24,6 +24,7 @@
 #include "lib.comms/message_sender/message_sender.hpp"
 #include "lib.filesystem/file_writer.hpp"
 #include "proto/FileChunk.pb.h"
+#include "proto/FileTransferComplete.pb.h"
 #include "proto/Result.pb.h"
 
 namespace p2pft
@@ -150,6 +151,8 @@ void Receiver::handleFileTransferProposalReq(std::unique_ptr<google::protobuf::A
 
 void Receiver::handleFileChunk(std::unique_ptr<google::protobuf::Any> anyPtr)
 {
+    using enum proto::Result;
+
     proto::FileChunk msg;
 
     auto unpackResult = anyPtr->UnpackTo(&msg);
@@ -166,7 +169,11 @@ void Receiver::handleFileChunk(std::unique_ptr<google::protobuf::Any> anyPtr)
     static auto fileWriter = std::make_unique<files::FileWriter>(args_.outDir, fileName_);
     fileWriter->write(data, isLast);
 
-    if (isLast) fileWriter = nullptr;
+    if (isLast)
+    {
+        fileWriter = nullptr;
+        sendFileTransferComplete(ACCEPTED);
+    }
 }
 
 void Receiver::sendFileTransferProposalResp()
@@ -180,6 +187,16 @@ void Receiver::sendFileTransferProposalResp()
 
     messageSender_->send(resp, [](const std::error_code& ec, size_t) {
         std::println("Send the FileTransferProposalResp with status {}", ec.message());
+    });
+}
+
+void Receiver::sendFileTransferComplete(proto::Result result)
+{
+    proto::FileTransferComplete resp;
+    resp.set_result(result);
+
+    messageSender_->send(resp, [](const std::error_code& ec, size_t) {
+        std::println("File transfer completed", ec.message());
     });
 }
 
