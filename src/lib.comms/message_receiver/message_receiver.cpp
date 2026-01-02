@@ -1,9 +1,12 @@
 #include "lib.comms/message_receiver/message_receiver.hpp"
 
 #include <cstddef>
+#include <cstdio>
 #include <memory>
 #include <print>
 #include <utility>
+
+#include <boost/asio/read.hpp>
 
 #include <google/protobuf/message.h>
 
@@ -21,37 +24,59 @@ void MessageReceiver::subscribe(ReceiverCallback callback)
 {
     callback_ = std::move(callback);
 
-    buffer_.resize(8192);
-
-    auto& socketPtr = session_->socketPtr_;
-
-    auto processMsg = [this](const std::error_code& ec, uint64_t size) {
-        std::println("Received a message of size {}", size);
-        handleMsg(ec, size);
-    };
-
-    socketPtr->async_receive(boost::asio::buffer(buffer_), processMsg);
+    readHeader();
 }
 
-void MessageReceiver::handleMsg(std::error_code ec, size_t)
+void MessageReceiver::readHeader()
 {
-    // TODO: Handle the size - might not receive the entire message in one go!
+    auto& socketPtr = session_->socketPtr_;
 
-    if (ec)
-    {
+    auto processBody = [this](std::error_code ec, auto) {
+        if (ec)
+        {
+            std::println(stderr, "Read failed: {}", ec.message());
+            return;
+        }
+
+        uint64_t size;
+        std::memcpy(&size, headerBuffer_.data(), sizeof(uint64_t));
+        readBody(size);
+    };
+
+    boost::asio::async_read(*socketPtr, boost::asio::buffer(headerBuffer_), processBody);
+}
+
+void MessageReceiver::readBody(uint64_t size)
+{
+    auto& socketPtr = session_->socketPtr_;
+
+    buffer_.clear();
+    buffer_.resize(size);
+
+    auto getMessage = [this](std::error_code ec, uint64_t size) {
+        if (ec)
+        {
+            std::println(stderr, "Read failed: {}", ec.message());
+            return;
+        }
+
+        std::println("Received a message of size {}B", size);
+
+        auto anyPtr      = std::make_unique<google::protobuf::Any>();
+        auto parseResult = anyPtr->ParseFromArray(buffer_.data(), static_cast<int>(size));
+
+        if (!parseResult)
+        {
+            std::println(stderr, "Failed to unpack the received message");
+            return;
+        }
+
         callback_(ec, nullptr);
-        return;
-    }
 
-    uint64_t anySize;
-    std::memcpy(&anySize, buffer_.data(), sizeof(uint64_t));
+        readHeader();
+    };
 
-    std::println("Received a message of size {}", anySize);
-
-    auto anyPtr = std::make_unique<google::protobuf::Any>();
-    anyPtr->ParseFromArray(buffer_.data() + sizeof(uint64_t), static_cast<int>(anySize));
-
-    callback_(ec, std::move(anyPtr));
+    boost::asio::async_read(*socketPtr, boost::asio::buffer(headerBuffer_), getMessage);
 }
 
 }  // namespace p2pft::comms

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+#include <cstdint>
 #include <functional>
 #include <memory>
 
@@ -19,12 +21,14 @@ public:
     void subscribe(ReceiverCallback callback) override;
 
 private:
-    void handleMsg(std::error_code errorCode, size_t size);
+    void readHeader();
+    void readBody(uint64_t size);
 
 private:
-    SessionPtr             session_;
-    std::vector<std::byte> buffer_;
-    ReceiverCallback       callback_;
+    SessionPtr               session_;
+    std::array<std::byte, 8> headerBuffer_;
+    std::vector<std::byte>   buffer_;
+    ReceiverCallback         callback_;
 };
 
 }  // namespace p2pft::comms
