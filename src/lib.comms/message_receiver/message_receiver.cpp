@@ -65,8 +65,6 @@ void MessageReceiver::readBody(uint64_t size)
             return;
         }
 
-        std::println("Received a message of size {}B", size);
-
         auto anyPtr      = std::make_unique<google::protobuf::Any>();
         auto parseResult = anyPtr->ParseFromArray(buffer_.data(), static_cast<int>(size));
 

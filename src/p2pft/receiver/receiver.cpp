@@ -36,7 +36,7 @@ namespace
 bool getUserConfirmation()
 {
     std::string response;
-    std::println("Accept the transfer? (yes/no): ");
+    std::print("Accept the transfer? (yes/no): ");
     std::getline(std::cin, response);
 
     std::ranges::transform(response, response.begin(), ::tolower);
@@ -55,7 +55,7 @@ void Receiver::run()
 {
     io_ = std::make_shared<boost::asio::io_context>();
 
-    std::println("Listening on port {} for incomming requests", args_.port);
+    std::println("Listening on port {} for incomming requests...", args_.port);
 
     auto connectionMgrPtr = std::make_unique<comms::ConnectionManager>(io_, args_.port);
     auto maybeSession     = connectionMgrPtr->listen();
@@ -132,7 +132,7 @@ void Receiver::handleFileTransferProposalReq(std::unique_ptr<google::protobuf::A
 
     std::println(
         "Received file transfer proposal\n"
-        "File size: {}\n"
+        "File size: {}B\n"
         "File name: {}\n",
         fileSize,
         fileName_);
@@ -177,7 +177,10 @@ void Receiver::sendFileTransferProposalResp()
     resp.set_result(reqResult);
 
     connection_->accessMsgSender().send(resp, [](const std::error_code& ec, size_t) {
-        std::println("Send the FileTransferProposalResp with status {}", ec.message());
+        if (ec)
+        {
+            std::println("Sending FileTransferProposalResp failed: {}", ec.message());
+        }
     });
 }
 
@@ -194,11 +197,8 @@ void Receiver::sendFileTransferComplete(proto::Result result)
 
 void Receiver::cleanup()
 {
-    std::println("[custom] cleanup called");
     connection_.reset();
-    std::println("[custom] cp1");
     io_->stop();
-    std::println("[custom] cp2");
 }
 
 }  // namespace p2pft

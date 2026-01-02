@@ -103,14 +103,12 @@ void Sender::run()
     f->set_name(filePath.filename().string());
     f->set_size(fileSize);
 
-    connection_->accessMsgSender().send(req, [](const auto& errorCode, auto msgSize) {
+    connection_->accessMsgSender().send(req, [](const auto& errorCode, auto) {
         if (errorCode)
         {
             std::println("Error during message sending: {}", errorCode.message());
             return;
         }
-
-        std::println("Successfully send message of size {}", msgSize);
     });
 
     auto work_guard = boost::asio::make_work_guard(*io_);
@@ -196,8 +194,6 @@ void Sender::startFileTransfer()
 
         ++chunkId;
     }
-
-    std::println("File was sent successfully");
 }
 
 void Sender::handleFileTransferComplete(std::unique_ptr<google::protobuf::Any> anyPtr)
@@ -220,7 +216,7 @@ void Sender::handleFileTransferComplete(std::unique_ptr<google::protobuf::Any> a
         return;
     }
 
-    std::println("Receiver completed the file transfer");
+    std::println("File was transfered successfully");
 
     connection_->accessMsgReceiver().unsubscribe();
     cleanup();
