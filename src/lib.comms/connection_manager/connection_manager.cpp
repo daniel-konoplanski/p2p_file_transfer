@@ -1,10 +1,7 @@
 #include "connection_manager.hpp"
 
-#include <algorithm>
 #include <expected>
 #include <memory>
-#include <print>
-#include <system_error>
 #include <utility>
 
 #include <boost/asio/connect.hpp>
@@ -18,16 +15,10 @@ namespace p2pft::comms
 
 using boost::asio::ip::tcp;
 
-ConnectionManager::ConnectionManager(IoContextPtr io, Port port)
-    : io_{ std::move(io) }
-    , port_{ port }
+SessionOrError ConnectionManager::listen(IoContextPtr io, Port port)
 {
-}
-
-SessionOrError ConnectionManager::listen()
-{
-    auto endpoint = tcp::endpoint(tcp::v4(), port_);
-    auto acceptor = tcp::acceptor(*io_, endpoint);
+    auto endpoint = tcp::endpoint(tcp::v4(), port);
+    auto acceptor = tcp::acceptor(*io, endpoint);
 
     boost::system::error_code ec{};
 
@@ -40,14 +31,14 @@ SessionOrError ConnectionManager::listen()
     return std::make_shared<Session>(std::make_unique<TcpSocket>(std::move(socket)));
 }
 
-SessionOrError ConnectionManager::connect(std::string_view address)
+SessionOrError ConnectionManager::connect(IoContextPtr io, std::string_view address, Port port)
 {
     auto addressV4 = boost::asio::ip::make_address_v4(address);
-    auto endpoint  = tcp::endpoint(addressV4, port_);
+    auto endpoint  = tcp::endpoint(addressV4, port);
 
     boost::system::error_code ec{};
 
-    tcp::socket socket(*io_);
+    tcp::socket socket(*io);
 
     if (socket.connect(endpoint, ec)) return std::unexpected(ec);
 

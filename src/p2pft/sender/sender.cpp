@@ -37,8 +37,7 @@ void Sender::run()
 {
     io_ = std::make_shared<boost::asio::io_context>();
 
-    auto connectionMgrPtr = std::make_unique<comms::ConnectionManager>(io_, args_.port);
-    auto maybeSession     = connectionMgrPtr->connect(args_.address);
+    auto maybeSession = comms::ConnectionManager::connect(io_, args_.address, args_.port);
 
     if (!maybeSession)
     {

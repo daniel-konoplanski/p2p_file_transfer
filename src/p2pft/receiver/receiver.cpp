@@ -16,6 +16,7 @@
 
 #include <proto/FileTransferProposalReq.pb.h>
 #include <proto/FileTransferProposalResp.pb.h>
+
 #include "p2pft/connection/connection.hpp"
 
 #include "lib.comms/connection_manager/connection_manager.hpp"
@@ -57,8 +58,7 @@ void Receiver::run()
 
     std::println("Listening on port {} for incomming requests...", args_.port);
 
-    auto connectionMgrPtr = std::make_unique<comms::ConnectionManager>(io_, args_.port);
-    auto maybeSession     = connectionMgrPtr->listen();
+    auto maybeSession = comms::ConnectionManager::listen(io_, args_.port);
 
     if (!maybeSession)
     {
