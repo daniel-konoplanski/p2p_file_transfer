@@ -34,7 +34,7 @@ void MessageReceiver::readHeader()
     auto processBody = [this](std::error_code ec, auto) {
         if (ec)
         {
-            std::println(stderr, "Read failed: {}", ec.message());
+            std::println(stderr, "Header read failed: {}", ec.message());
             return;
         }
 
@@ -53,10 +53,10 @@ void MessageReceiver::readBody(uint64_t size)
     buffer_.clear();
     buffer_.resize(size);
 
-    auto getMessage = [this](std::error_code ec, uint64_t size) {
+    auto getMessage = [this, size](std::error_code ec, auto) {
         if (ec)
         {
-            std::println(stderr, "Read failed: {}", ec.message());
+            std::println(stderr, "Message read failed: {}", ec.message());
             return;
         }
 
@@ -71,12 +71,13 @@ void MessageReceiver::readBody(uint64_t size)
             return;
         }
 
-        callback_(ec, nullptr);
+        if (callback_)
+            callback_(ec, std::move(anyPtr));
 
         readHeader();
     };
 
-    boost::asio::async_read(*socketPtr, boost::asio::buffer(headerBuffer_), getMessage);
+    boost::asio::async_read(*socketPtr, boost::asio::buffer(buffer_), getMessage);
 }
 
 }  // namespace p2pft::comms

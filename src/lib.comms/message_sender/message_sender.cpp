@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include <boost/asio/registered_buffer.hpp>
+#include <boost/asio/write.hpp>
 
 #include <google/protobuf/any.pb.h>
 #include <google/protobuf/message.h>
@@ -23,18 +24,18 @@ void MessageSender::send(const google::protobuf::Message& message, SenderCallbac
     any.PackFrom(message);
 
     uint64_t anySize    = any.ByteSizeLong();
-    uint64_t sizeHeader = static_cast<uint64_t>(anySize);
+    uint64_t headerSize = static_cast<uint64_t>(anySize);
 
     buffer_.clear();
-    buffer_.resize(sizeof(sizeHeader) + anySize);
+    buffer_.resize(sizeof(headerSize) + anySize);
 
-    std::memcpy(buffer_.data(), &sizeHeader, sizeof(sizeHeader));
+    std::memcpy(buffer_.data(), &headerSize, sizeof(headerSize));
 
-    any.SerializeToArray(buffer_.data() + sizeof(sizeHeader), static_cast<int>(anySize));
+    any.SerializeToArray(buffer_.data() + sizeof(headerSize), static_cast<int>(anySize));
 
     auto& socketPtr = session_->socketPtr_;
 
-    socketPtr->async_send(boost::asio::buffer(buffer_), callback);
+    boost::asio::async_write(*socketPtr, boost::asio::buffer(buffer_), callback);
 }
 
 }  // namespace p2pft::comms
