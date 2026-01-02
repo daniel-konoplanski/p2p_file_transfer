@@ -12,18 +12,18 @@
 #include <boost/asio/io_context.hpp>
 
 #include <proto/FileChunk.pb.h>
+#include <proto/FileTransferComplete.pb.h>
 #include <proto/FileTransferProposalReq.pb.h>
 #include <proto/FileTransferProposalResp.pb.h>
 #include <proto/Result.pb.h>
 
 #include "lib.cli/parser.hpp"
 
+#include "p2pft/connection/connection.hpp"
+
 #include "lib.comms/connection_manager/connection_manager.hpp"
 #include "lib.comms/i_receiver.hpp"
 #include "lib.comms/i_sender.hpp"
-#include "lib.comms/message_receiver/message_receiver.hpp"
-#include "lib.comms/message_sender/message_sender.hpp"
-#include "proto/FileTransferComplete.pb.h"
 
 namespace p2pft
 {
@@ -50,18 +50,16 @@ void Sender::run()
         return;  // TODO: return an error code;
     }
 
-    auto sessionPtr     = *maybeSession;
-    auto remoteEndpoint = sessionPtr->socketPtr_->remote_endpoint();
+    connection_ = std::make_unique<Connection>(*maybeSession);
+
+    const auto& remoteEndpoint = connection_->accessSession().socketPtr_->remote_endpoint();
 
     std::println(
         "Successfully connected to receiver with address {}:{}",
         remoteEndpoint.address().to_string(),
         remoteEndpoint.port());
 
-    messageSender_   = std::make_unique<comms::MessageSender>(sessionPtr);
-    messageReceiver_ = std::make_unique<comms::MessageReceiver>(sessionPtr);
-
-    messageReceiver_->subscribe(
+    connection_->accessMsgReceiver().subscribe(
         [this](const std::error_code& ec, std::unique_ptr<google::protobuf::Any> anyPtr) {
             if (ec)
             {
@@ -105,7 +103,7 @@ void Sender::run()
     f->set_name(filePath.filename().string());
     f->set_size(fileSize);
 
-    messageSender_->send(req, [](const auto& errorCode, auto msgSize) {
+    connection_->accessMsgSender().send(req, [](const auto& errorCode, auto msgSize) {
         if (errorCode)
         {
             std::println("Error during message sending: {}", errorCode.message());
@@ -126,7 +124,7 @@ void Sender::handleMessage(std::unique_ptr<google::protobuf::Any> anyPtr)
     {
         handleFileTransferProposalResp(std::move(anyPtr));
     }
-    else if(anyPtr->Is<proto::FileTransferComplete>())
+    else if (anyPtr->Is<proto::FileTransferComplete>())
     {
         handleFileTransferComplete(std::move(anyPtr));
     }
@@ -189,7 +187,7 @@ void Sender::startFileTransfer()
         fileChunkMsg.set_data(chunkBuffer.data(), bytesRead);
         fileChunkMsg.set_is_last(totalChunks == chunkId);
 
-        messageSender_->send(fileChunkMsg, [](const std::error_code& ec, size_t) {
+        connection_->accessMsgSender().send(fileChunkMsg, [](const std::error_code& ec, size_t) {
             if (ec)
             {
                 std::println(stderr, "Message sending failed {}", ec.message());
@@ -223,6 +221,15 @@ void Sender::handleFileTransferComplete(std::unique_ptr<google::protobuf::Any> a
     }
 
     std::println("Receiver completed the file transfer");
+
+    connection_->accessMsgReceiver().unsubscribe();
+    cleanup();
+}
+
+void Sender::cleanup()
+{
+    connection_.reset();
+    io_->stop();
 }
 
 }  // namespace p2pft

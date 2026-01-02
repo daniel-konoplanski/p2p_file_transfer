@@ -1,7 +1,6 @@
 #include "receiver.hpp"
 
 #include <algorithm>
-#include <cstdint>
 #include <cstdio>
 #include <filesystem>
 #include <memory>
@@ -17,6 +16,7 @@
 
 #include <proto/FileTransferProposalReq.pb.h>
 #include <proto/FileTransferProposalResp.pb.h>
+#include "p2pft/connection/connection.hpp"
 
 #include "lib.comms/connection_manager/connection_manager.hpp"
 #include "lib.comms/i_receiver.hpp"
@@ -53,11 +53,11 @@ Receiver::Receiver(cli::ReceiverArgs args)
 
 void Receiver::run()
 {
-    auto io = std::make_shared<boost::asio::io_context>();
+    io_ = std::make_shared<boost::asio::io_context>();
 
     std::println("Listening on port {} for incomming requests", args_.port);
 
-    auto connectionMgrPtr = std::make_unique<comms::ConnectionManager>(io, args_.port);
+    auto connectionMgrPtr = std::make_unique<comms::ConnectionManager>(io_, args_.port);
     auto maybeSession     = connectionMgrPtr->listen();
 
     if (!maybeSession)
@@ -66,25 +66,16 @@ void Receiver::run()
         return;
     }
 
-    auto sessionPtr = *maybeSession;
+    connection_ = std::make_unique<Connection>(*maybeSession);
 
-    if (!sessionPtr)
-    {
-        std::println(stderr, "sessionPtr is nullptr!!!!");
-        return;
-    }
-
-    auto remoteEndpoint = sessionPtr->socketPtr_->remote_endpoint();
+    const auto& remoteEndpoint = connection_->accessSession().socketPtr_->remote_endpoint();
 
     std::println(
         "Successfully connected to sender with address {}:{}",
         remoteEndpoint.address().to_string(),
         remoteEndpoint.port());
 
-    messageSender_   = std::make_unique<comms::MessageSender>(sessionPtr);
-    messageReceiver_ = std::make_unique<comms::MessageReceiver>(sessionPtr);
-
-    messageReceiver_->subscribe(
+    connection_->accessMsgReceiver().subscribe(
         [this](const std::error_code& ec, std::unique_ptr<google::protobuf::Any> anyPtr) {
             if (ec)
             {
@@ -95,9 +86,9 @@ void Receiver::run()
             handleMessage(std::move(anyPtr));
         });
 
-    auto work_guard = boost::asio::make_work_guard(*io);
+    auto work_guard = boost::asio::make_work_guard(*io_);
 
-    io->run();
+    io_->run();
 }
 
 void Receiver::handleMessage(std::unique_ptr<google::protobuf::Any> anyPtr)
@@ -185,7 +176,7 @@ void Receiver::sendFileTransferProposalResp()
 
     resp.set_result(reqResult);
 
-    messageSender_->send(resp, [](const std::error_code& ec, size_t) {
+    connection_->accessMsgSender().send(resp, [](const std::error_code& ec, size_t) {
         std::println("Send the FileTransferProposalResp with status {}", ec.message());
     });
 }
@@ -195,9 +186,19 @@ void Receiver::sendFileTransferComplete(proto::Result result)
     proto::FileTransferComplete resp;
     resp.set_result(result);
 
-    messageSender_->send(resp, [](const std::error_code& ec, size_t) {
+    connection_->accessMsgSender().send(resp, [this](const std::error_code& ec, size_t) {
         std::println("File transfer completed", ec.message());
+        cleanup();
     });
+}
+
+void Receiver::cleanup()
+{
+    std::println("[custom] cleanup called");
+    connection_.reset();
+    std::println("[custom] cp1");
+    io_->stop();
+    std::println("[custom] cp2");
 }
 
 }  // namespace p2pft

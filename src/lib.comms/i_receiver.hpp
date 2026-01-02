@@ -20,6 +20,7 @@ public:
 
 public:
     virtual void subscribe(ReceiverCallback callback) = 0;
+    virtual void unsubscribe()                        = 0;
 };
 
 }  // namespace p2pft::comms

@@ -7,7 +7,7 @@ add_subdirectory(lib.filesystem)
 # add_library(p2p_ft_core OBJECT p2pft/sender/sender.cpp)
 # add_executable(p2p_ft main.cpp $<TARGET_OBJECTS:p2p_ft_core>)
 
-add_executable(p2p_ft main.cpp p2pft/sender/sender.cpp p2pft/startup/startup.cpp p2pft/receiver/receiver.cpp)
+add_executable(p2p_ft main.cpp p2pft/sender/sender.cpp p2pft/startup/startup.cpp p2pft/receiver/receiver.cpp p2pft/connection/connection.cpp)
 
 target_link_libraries(p2p_ft
     PUBLIC p2pft_proto_lib

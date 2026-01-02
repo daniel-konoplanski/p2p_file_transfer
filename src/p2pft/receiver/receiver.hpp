@@ -7,13 +7,12 @@
 
 #include <google/protobuf/any.pb.h>
 
+#include <proto/Result.pb.h>
+
 #include "lib.cli/parser.hpp"
 
 #include "p2pft/application.hpp"
-
-#include "lib.comms/i_receiver.hpp"
-#include "lib.comms/i_sender.hpp"
-#include "proto/Result.pb.h"
+#include "p2pft/connection/connection.hpp"
 
 namespace p2pft
 {
@@ -33,12 +32,13 @@ private:
     void handleFileTransferProposalReq(std::unique_ptr<google::protobuf::Any> anyPtr);
     void handleFileChunk(std::unique_ptr<google::protobuf::Any> anyPtr);
     void sendFileTransferComplete(proto::Result result);
+    void cleanup();
 
 private:
     cli::ReceiverArgs                        args_;
-    std::unique_ptr<comms::IMessageSender>   messageSender_;
-    std::unique_ptr<comms::IMessageReceiver> messageReceiver_;
     std::string                              fileName_;
+    std::shared_ptr<boost::asio::io_context> io_;
+    std::unique_ptr<Connection>              connection_;
 };
 
 }  // namespace p2pft

@@ -27,6 +27,11 @@ void MessageReceiver::subscribe(ReceiverCallback callback)
     readHeader();
 }
 
+void MessageReceiver::unsubscribe()
+{
+    stop_ = true;
+}
+
 void MessageReceiver::readHeader()
 {
     auto& socketPtr = session_->socketPtr_;
@@ -74,7 +79,8 @@ void MessageReceiver::readBody(uint64_t size)
         if (callback_)
             callback_(ec, std::move(anyPtr));
 
-        readHeader();
+        if (!stop_)
+            readHeader();
     };
 
     boost::asio::async_read(*socketPtr, boost::asio::buffer(buffer_), getMessage);
