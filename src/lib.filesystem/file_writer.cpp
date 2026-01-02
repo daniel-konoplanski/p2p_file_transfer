@@ -23,13 +23,7 @@ void FileWriter::write(const std::string& bytes, bool isLast)
 {
     if (buffer_.size() + bytes.size() > BUFFER_SIZE)
     {
-        std::println(stderr, "This shouldn't happend, it should be devisible");
-        return;
-    }
-
-    if (buffer_.size() == BUFFER_SIZE)
-    {
-        file_.stream.write(bytes.c_str(), bytes.size());
+        file_.stream.write(reinterpret_cast<const char*>(buffer_.data()), buffer_.size());
         buffer_.clear();
     }
 
@@ -39,9 +33,9 @@ void FileWriter::write(const std::string& bytes, bool isLast)
 
     if (isLast)
     {
-        file_.stream.write(bytes.c_str(), bytes.size());
-        file_.stream.close();
+        if (!buffer_.empty()) file_.stream.write(reinterpret_cast<const char*>(buffer_.data()), buffer_.size());
 
+        file_.stream.close();
         std::println("File write successfull!");
     }
 }
