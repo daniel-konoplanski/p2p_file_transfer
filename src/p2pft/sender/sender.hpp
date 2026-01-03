@@ -9,9 +9,6 @@
 #include "p2pft/application.hpp"
 #include "p2pft/connection/connection.hpp"
 
-#include "lib.comms/i_receiver.hpp"
-#include "lib.comms/i_sender.hpp"
-
 namespace p2pft
 {
 
@@ -30,8 +27,10 @@ private:
     void handleFileTransferComplete(std::unique_ptr<google::protobuf::Any> anyPtr);
     void startFileTransfer();
     void cleanup();
+    void sendChunk(std::shared_ptr<std::ifstream> file, uint64_t totalChunks, uint64_t chunkId);
 
 private:
+    constexpr static uint64_t                CHUNK_SIZE{ 8192U };
     cli::SenderArgs                          args_;
     std::shared_ptr<boost::asio::io_context> io_;
     std::unique_ptr<Connection>              connection_;

@@ -153,11 +153,9 @@ void Sender::handleFileTransferProposalResp(std::unique_ptr<google::protobuf::An
 
 void Sender::startFileTransfer()
 {
-    constexpr uint64_t CHUNK_SIZE = 8192U;
-
     const auto& filePath = args_.path;
 
-    std::ifstream file(args_.path, std::ios::binary);
+    auto file = std::make_shared<std::ifstream>(args_.path, std::ios::binary);
 
     if (!file)
     {
@@ -165,34 +163,40 @@ void Sender::startFileTransfer()
         return;
     }
 
-    std::vector<char> chunkBuffer(CHUNK_SIZE);
-
     uint64_t fileSize    = std::filesystem::file_size(filePath);
     uint64_t totalChunks = (fileSize + CHUNK_SIZE - 1) / CHUNK_SIZE;
-    uint64_t chunkId     = 1;
 
-    while (file)
-    {
-        file.read(chunkBuffer.data(), CHUNK_SIZE);
-        std::streamsize bytesRead = file.gcount();
+    sendChunk(file, totalChunks, 1);
+}
 
-        if (!bytesRead) continue;
+void Sender::sendChunk(std::shared_ptr<std::ifstream> file, uint64_t totalChunks, uint64_t chunkId)
+{
+    constexpr uint64_t CHUNK_SIZE = 8192U;
+    std::vector<char>  chunkBuffer(CHUNK_SIZE);
 
-        proto::FileChunk fileChunkMsg;
-        fileChunkMsg.set_id(chunkId);
-        fileChunkMsg.set_size(bytesRead);
-        fileChunkMsg.set_data(chunkBuffer.data(), bytesRead);
-        fileChunkMsg.set_is_last(totalChunks == chunkId);
+    file->read(chunkBuffer.data(), CHUNK_SIZE);
+    std::streamsize bytesRead = file->gcount();
 
-        connection_->accessMsgSender().send(fileChunkMsg, [](const std::error_code& ec, size_t) {
+    if (!bytesRead) return;
+
+    proto::FileChunk fileChunkMsg;
+    fileChunkMsg.set_id(chunkId);
+    fileChunkMsg.set_size(bytesRead);
+    fileChunkMsg.set_data(chunkBuffer.data(), bytesRead);
+    fileChunkMsg.set_is_last(totalChunks == chunkId);
+
+    connection_->accessMsgSender().send(
+        fileChunkMsg,
+        [this, file, totalChunks, chunkId](const std::error_code& ec, size_t) mutable {
             if (ec)
             {
                 std::println(stderr, "Message sending failed {}", ec.message());
+                return;
             }
-        });
 
-        ++chunkId;
-    }
+            ++chunkId;
+            sendChunk(file, totalChunks, chunkId);
+        });
 }
 
 void Sender::handleFileTransferComplete(std::unique_ptr<google::protobuf::Any> anyPtr)
