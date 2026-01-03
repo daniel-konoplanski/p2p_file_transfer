@@ -16,8 +16,8 @@ using SessionOrError = std::expected<SessionPtr, boost::system::error_code>;
 class ConnectionManager
 {
 public:
-    static SessionOrError listen(IoContextPtr io, Port port);
-    static SessionOrError connect(IoContextPtr io, std::string_view address, Port port);
+    static SessionOrError listen(const IoContextPtr& io, Port port);
+    static SessionOrError connect(const IoContextPtr& io, std::string_view address, Port port);
 };
 
 }  // namespace p2pft::comms

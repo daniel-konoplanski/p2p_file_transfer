@@ -12,13 +12,13 @@ namespace p2pft
 class Connection
 {
 public:
-    Connection(std::shared_ptr<p2pft::comms::Session> session);
+    explicit Connection(std::shared_ptr<p2pft::comms::Session> session);
     ~Connection();
 
 public:
-    comms::IMessageSender&   accessMsgSender();
-    comms::IMessageReceiver& accessMsgReceiver();
-    p2pft::comms::Session&   accessSession();
+    comms::IMessageSender&   accessMsgSender() const;
+    comms::IMessageReceiver& accessMsgReceiver() const;
+    p2pft::comms::Session&   accessSession() const;
 
 private:
     std::shared_ptr<p2pft::comms::Session>   session_{};

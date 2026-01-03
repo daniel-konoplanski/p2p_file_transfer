@@ -71,7 +71,7 @@ void Sender::run()
     const std::filesystem::path filePath{ args_.path };
 
     std::error_code ec;
-    const auto            doesFileExist = std::filesystem::exists(filePath, ec);
+    const auto      doesFileExist = std::filesystem::exists(filePath, ec);
 
     if (ec)
     {
@@ -167,7 +167,7 @@ void Sender::startFileTransfer()
 
 void Sender::sendChunk(std::shared_ptr<std::ifstream> file, uint64_t totalChunks, uint64_t chunkId)
 {
-    std::vector<char>  chunkBuffer(CHUNK_SIZE);
+    std::vector<char> chunkBuffer(CHUNK_SIZE);
 
     file->read(chunkBuffer.data(), CHUNK_SIZE);
     const std::streamsize bytesRead = file->gcount();

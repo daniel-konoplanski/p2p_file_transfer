@@ -4,7 +4,7 @@ package p2pft.proto;
 message FileChunk
 {
     uint32 id = 1;
-    uint32 size = 2; // ChunckSizeInBytes
+    uint32 size = 2; // ChunkSizeInBytes
     bytes data = 3; // Raw data
     bool is_last = 4;
 }

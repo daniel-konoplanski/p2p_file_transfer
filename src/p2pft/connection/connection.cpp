@@ -20,24 +20,22 @@ Connection::~Connection()
     messageReceiver_.reset();
     messageSender_.reset();
 
-    auto& socket = session_->socketPtr_;
-
-    if (socket->is_open()) socket->close();
+    if (const auto& socket = session_->socketPtr_; socket->is_open()) socket->close();
 
     session_.reset();
 }
 
-comms::IMessageSender& Connection::accessMsgSender()
+comms::IMessageSender& Connection::accessMsgSender() const
 {
     return *messageSender_;
 }
 
-comms::IMessageReceiver& Connection::accessMsgReceiver()
+comms::IMessageReceiver& Connection::accessMsgReceiver() const
 {
     return *messageReceiver_;
 }
 
-p2pft::comms::Session& Connection::accessSession()
+p2pft::comms::Session& Connection::accessSession() const
 {
     return *session_;
 }

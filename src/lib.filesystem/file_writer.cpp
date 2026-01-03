@@ -27,16 +27,17 @@ void FileWriter::write(const std::string& bytes, bool isLast)
         buffer_.clear();
     }
 
-    std::transform(bytes.begin(), bytes.end(), std::back_inserter(buffer_), [](const char b) {
+    std::ranges::transform(bytes, std::back_inserter(buffer_), [](const char b) {
         return static_cast<std::byte>(b);
     });
 
     if (isLast)
     {
-        if (!buffer_.empty()) file_.stream.write(reinterpret_cast<const char*>(buffer_.data()), buffer_.size());
+        if (!buffer_.empty())
+            file_.stream.write(reinterpret_cast<const char*>(buffer_.data()), buffer_.size());
 
         file_.stream.close();
-        std::println("File write successfull!");
+        std::println("File written successfully");
     }
 }
 

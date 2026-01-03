@@ -23,8 +23,8 @@ void MessageSender::send(const google::protobuf::Message& message, SenderCallbac
     google::protobuf::Any any;
     any.PackFrom(message);
 
-    uint64_t anySize    = any.ByteSizeLong();
-    uint64_t headerSize = static_cast<uint64_t>(anySize);
+    const uint64_t anySize    = any.ByteSizeLong();
+    const uint64_t headerSize = anySize;
 
     buffer_.clear();
     buffer_.resize(sizeof(headerSize) + anySize);
@@ -33,7 +33,7 @@ void MessageSender::send(const google::protobuf::Message& message, SenderCallbac
 
     any.SerializeToArray(buffer_.data() + sizeof(headerSize), static_cast<int>(anySize));
 
-    auto& socketPtr = session_->socketPtr_;
+    const auto& socketPtr = session_->socketPtr_;
 
     boost::asio::async_write(*socketPtr, boost::asio::buffer(buffer_), callback);
 }

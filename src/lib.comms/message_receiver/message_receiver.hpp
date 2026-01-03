@@ -5,7 +5,6 @@
 #include <memory>
 
 #include <google/protobuf/any.pb.h>
-#include <google/protobuf/message.h>
 
 #include "lib.comms/i_receiver.hpp"
 #include "lib.comms/session.hpp"
@@ -16,7 +15,7 @@ namespace p2pft::comms
 class MessageReceiver : public IMessageReceiver
 {
 public:
-    MessageReceiver(SessionPtr session);
+    explicit MessageReceiver(SessionPtr session);
     void subscribe(ReceiverCallback callback) override;
     void unsubscribe() override;
 

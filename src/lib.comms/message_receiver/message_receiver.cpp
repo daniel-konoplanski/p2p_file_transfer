@@ -33,9 +33,9 @@ void MessageReceiver::unsubscribe()
 
 void MessageReceiver::readHeader()
 {
-    auto& socketPtr = session_->socketPtr_;
+    const auto& socketPtr = session_->socketPtr_;
 
-    auto processBody = [this](std::error_code ec, auto) {
+    auto processBody = [this](const std::error_code ec, auto) {
         if (ec)
         {
             std::println(stderr, "Header read failed: {}", ec.message());
@@ -52,32 +52,30 @@ void MessageReceiver::readHeader()
 
 void MessageReceiver::readBody(uint64_t size)
 {
-    auto& socketPtr = session_->socketPtr_;
+    const auto& socketPtr = session_->socketPtr_;
 
     buffer_.clear();
     buffer_.resize(size);
 
-    auto getMessage = [this, size](std::error_code ec, auto) {
+    auto getMessage = [this, size](const std::error_code ec, auto) {
         if (ec)
         {
             std::println(stderr, "Message read failed: {}", ec.message());
             return;
         }
 
-        auto anyPtr      = std::make_unique<google::protobuf::Any>();
-        auto parseResult = anyPtr->ParseFromArray(buffer_.data(), static_cast<int>(size));
+        auto anyPtr = std::make_unique<google::protobuf::Any>();
 
-        if (!parseResult)
+        if (const auto parseResult = anyPtr->ParseFromArray(buffer_.data(), static_cast<int>(size));
+            !parseResult)
         {
             std::println(stderr, "Failed to unpack the received message");
             return;
         }
 
-        if (callback_)
-            callback_(ec, std::move(anyPtr));
+        if (callback_) callback_(ec, std::move(anyPtr));
 
-        if (!stop_)
-            readHeader();
+        if (!stop_) readHeader();
     };
 
     boost::asio::async_read(*socketPtr, boost::asio::buffer(buffer_), getMessage);

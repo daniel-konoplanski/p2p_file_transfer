@@ -13,8 +13,8 @@ using SenderCallback = std::function<void(const std::error_code&, size_t)>;
 class MessageSender : public IMessageSender
 {
 public:
-    MessageSender(SessionPtr session);
-    virtual ~MessageSender() = default;
+    explicit MessageSender(SessionPtr session);
+    ~MessageSender() override = default;
 
 public:
     void send(const google::protobuf::Message& message, SenderCallback callback) override;

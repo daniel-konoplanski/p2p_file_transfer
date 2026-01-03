@@ -12,9 +12,9 @@ namespace p2pft::startup
 class AppVisitor
 {
 public:
-    std::unique_ptr<IApplication> operator()(cli::SenderArgs args);
-    std::unique_ptr<IApplication> operator()(cli::ReceiverArgs args);
-    std::unique_ptr<IApplication> operator()(std::nullopt_t);
+    std::unique_ptr<IApplication> operator()(cli::SenderArgs args) const;
+    std::unique_ptr<IApplication> operator()(cli::ReceiverArgs args) const;
+    std::unique_ptr<IApplication> operator()(std::nullopt_t) const;
 };
 
 }  // namespace p2pft::startup

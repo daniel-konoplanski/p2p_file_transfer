@@ -1,6 +1,5 @@
 # runs clang-format
 # clang-format.sh <>
-# eg. clang-tidy.sh gcc release
 
 #!bin/bash
 

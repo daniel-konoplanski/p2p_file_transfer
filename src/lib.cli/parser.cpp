@@ -1,6 +1,5 @@
 #include "parser.hpp"
 
-#include <cstdlib>
 #include <optional>
 
 #include <CLI/CLI.hpp>
@@ -8,7 +7,7 @@
 namespace cli
 {
 
-CliArgs Parser::parse(int argc, char* argv[])
+CliArgs Parser::parse(const int argc, char* argv[])
 {
     CLI::App app{ "P2P File Transfer" };
 
@@ -16,12 +15,12 @@ CliArgs Parser::parse(int argc, char* argv[])
     std::string path;
     uint16_t    port = 52000;
 
-    auto send = app.add_subcommand("send", "Send files to a receiver");
+    const auto send = app.add_subcommand("send", "Send files to a receiver");
     send->add_option("-t,--target", address, "Address of the receiver")->required();
     send->add_option("-i,--input", path, "File to transfer")->required();
     send->add_option("-p,--port", port, "Port number");
 
-    auto receive = app.add_subcommand("receive", "Receive files from a sender");
+    const auto receive = app.add_subcommand("receive", "Receive files from a sender");
     receive->add_option("-o,--out-dir", path, "Port number")->required();
     receive->add_option("-p,--port", port, "Port number");
 

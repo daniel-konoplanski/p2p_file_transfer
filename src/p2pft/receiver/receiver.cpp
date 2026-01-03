@@ -113,8 +113,8 @@ void Receiver::handleFileTransferProposalReq(std::unique_ptr<google::protobuf::A
         return;
     }
 
-    fileName_      = req.files().name();
-    auto fileSize  = req.files().size();
+    fileName_     = req.files().name();
+    auto fileSize = req.files().size();
 
     if (auto spaceInfo = std::filesystem::space(args_.outDir); spaceInfo.available < fileSize)
     {

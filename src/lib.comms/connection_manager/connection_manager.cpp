@@ -15,10 +15,10 @@ namespace p2pft::comms
 
 using boost::asio::ip::tcp;
 
-SessionOrError ConnectionManager::listen(IoContextPtr io, Port port)
+SessionOrError ConnectionManager::listen(const IoContextPtr& io, const Port port)
 {
-    auto endpoint = tcp::endpoint(tcp::v4(), port);
-    auto acceptor = tcp::acceptor(*io, endpoint);
+    const auto endpoint = tcp::endpoint(tcp::v4(), port);
+    auto       acceptor = tcp::acceptor(*io, endpoint);
 
     boost::system::error_code ec{};
 
@@ -31,10 +31,11 @@ SessionOrError ConnectionManager::listen(IoContextPtr io, Port port)
     return std::make_shared<Session>(std::make_unique<TcpSocket>(std::move(socket)));
 }
 
-SessionOrError ConnectionManager::connect(IoContextPtr io, std::string_view address, Port port)
+SessionOrError
+ConnectionManager::connect(const IoContextPtr& io, const std::string_view address, const Port port)
 {
-    auto addressV4 = boost::asio::ip::make_address_v4(address);
-    auto endpoint  = tcp::endpoint(addressV4, port);
+    const auto addressV4 = boost::asio::ip::make_address_v4(address);
+    const auto endpoint  = tcp::endpoint(addressV4, port);
 
     boost::system::error_code ec{};
 
