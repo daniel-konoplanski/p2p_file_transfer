@@ -143,9 +143,10 @@ void Receiver::handleFileChunk(std::unique_ptr<google::protobuf::Any> anyPtr)
 
     proto::FileChunk msg;
 
-    if (auto unpackResult = anyPtr->UnpackTo(&msg); !unpackResult)
+    if (const auto unpackResult = anyPtr->UnpackTo(&msg); !unpackResult)
     {
         std::println(stderr, "Failed to unpack message to FileTransferProposalReq");
+        sendFileTransferComplete(REJECTED);
         return;
     }
 

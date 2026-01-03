@@ -138,7 +138,11 @@ void Sender::handleFileTransferProposalResp(std::unique_ptr<google::protobuf::An
 
     if (const bool result = resp.result() == proto::Result::ACCEPTED ? true : false; !result)
     {
-        std::println("Receiver rejected the file transfer");
+        if (resp.result() == proto::Result::REJECTED)
+            std::println("Receiver rejected the file transfer");
+        else if (resp.result() == proto::Result::FAILED)
+            std::println("Receiver failed the file transfer");
+
         cleanup();
         return;
     }
@@ -206,7 +210,7 @@ void Sender::handleFileTransferComplete(std::unique_ptr<google::protobuf::Any> a
 
     if (const bool result = resp.result() == proto::Result::ACCEPTED ? true : false; !result)
     {
-        std::println("Received FileTransferComplete with result FAILURE");
+        std::println("Receiver failed the file transfer");
         return;
     }
 
