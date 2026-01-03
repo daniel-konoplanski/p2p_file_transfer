@@ -1,7 +1,6 @@
 #pragma once
 
 #include <array>
-#include <cstdint>
 #include <functional>
 #include <memory>
 
@@ -27,9 +26,9 @@ private:
 
 private:
     bool                     stop_{};
-    SessionPtr               session_;
-    std::array<std::byte, 8> headerBuffer_;
+    std::array<std::byte, 8> headerBuffer_{};
     std::vector<std::byte>   buffer_;
+    SessionPtr               session_;
     ReceiverCallback         callback_;
 };
 

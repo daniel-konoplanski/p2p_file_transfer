@@ -48,7 +48,7 @@ bool getUserConfirmation()
 }  // namespace
 
 Receiver::Receiver(cli::ReceiverArgs args)
-    : args_{ args }
+    : args_{ std::move(args) }
 {
 }
 
@@ -56,7 +56,7 @@ void Receiver::run()
 {
     io_ = std::make_shared<boost::asio::io_context>();
 
-    std::println("Listening on port {} for incomming requests...", args_.port);
+    std::println("Listening on port {} for incoming requests...", args_.port);
 
     auto maybeSession = comms::ConnectionManager::listen(io_, args_.port);
 
@@ -79,7 +79,7 @@ void Receiver::run()
         [this](const std::error_code& ec, std::unique_ptr<google::protobuf::Any> anyPtr) {
             if (ec)
             {
-                std::println("Message recival failed: {}", ec.message());
+                std::println("Message receiving failed: {}", ec.message());
                 return;
             }
 
@@ -107,9 +107,7 @@ void Receiver::handleFileTransferProposalReq(std::unique_ptr<google::protobuf::A
 {
     proto::FileTransferProposalReq req;
 
-    auto unpackResult = anyPtr->UnpackTo(&req);
-
-    if (!unpackResult)
+    if (const auto unpackResult = anyPtr->UnpackTo(&req); !unpackResult)
     {
         std::println(stderr, "Failed to unpack message to FileTransferProposalReq");
         return;
@@ -117,9 +115,8 @@ void Receiver::handleFileTransferProposalReq(std::unique_ptr<google::protobuf::A
 
     fileName_      = req.files().name();
     auto fileSize  = req.files().size();
-    auto spaceInfo = std::filesystem::space(args_.outDir);
 
-    if (spaceInfo.available < fileSize)
+    if (auto spaceInfo = std::filesystem::space(args_.outDir); spaceInfo.available < fileSize)
     {
         std::println(
             stderr,
@@ -146,9 +143,7 @@ void Receiver::handleFileChunk(std::unique_ptr<google::protobuf::Any> anyPtr)
 
     proto::FileChunk msg;
 
-    auto unpackResult = anyPtr->UnpackTo(&msg);
-
-    if (!unpackResult)
+    if (auto unpackResult = anyPtr->UnpackTo(&msg); !unpackResult)
     {
         std::println(stderr, "Failed to unpack message to FileTransferProposalReq");
         return;
@@ -172,19 +167,26 @@ void Receiver::sendFileTransferProposalResp()
     using enum proto::Result;
     proto::FileTransferProposalResp resp;
 
-    proto::Result reqResult = getUserConfirmation() ? ACCEPTED : REJECTED;
+    const proto::Result reqResult = getUserConfirmation() ? ACCEPTED : REJECTED;
 
     resp.set_result(reqResult);
 
-    connection_->accessMsgSender().send(resp, [](const std::error_code& ec, size_t) {
+    connection_->accessMsgSender().send(resp, [this, reqResult](const std::error_code& ec, size_t) {
         if (ec)
         {
             std::println("Sending FileTransferProposalResp failed: {}", ec.message());
+            return;
+        }
+
+        if (reqResult == REJECTED)
+        {
+            std::println("File transfer rejected");
+            cleanup();
         }
     });
 }
 
-void Receiver::sendFileTransferComplete(proto::Result result)
+void Receiver::sendFileTransferComplete(const proto::Result result)
 {
     proto::FileTransferComplete resp;
     resp.set_result(result);

@@ -1,6 +1,5 @@
 #include "sender.hpp"
 
-#include <cstdint>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
@@ -62,17 +61,17 @@ void Sender::run()
         [this](const std::error_code& ec, std::unique_ptr<google::protobuf::Any> anyPtr) {
             if (ec)
             {
-                std::println("Message recival failed: {}", ec.message());
+                std::println("Message receiving failed: {}", ec.message());
                 return;
             }
 
             handleMessage(std::move(anyPtr));
         });
 
-    std::filesystem::path filePath{ args_.path };
+    const std::filesystem::path filePath{ args_.path };
 
     std::error_code ec;
-    auto            doesFileExist = std::filesystem::exists(filePath, ec);
+    const auto            doesFileExist = std::filesystem::exists(filePath, ec);
 
     if (ec)
     {
@@ -86,7 +85,7 @@ void Sender::run()
         return;
     }
 
-    auto fileSize = std::filesystem::file_size(filePath, ec);
+    const auto fileSize = std::filesystem::file_size(filePath, ec);
 
     if (ec)
     {
@@ -131,19 +130,16 @@ void Sender::handleFileTransferProposalResp(std::unique_ptr<google::protobuf::An
 {
     proto::FileTransferProposalResp resp;
 
-    auto unpackResult = anyPtr->UnpackTo(&resp);
-
-    if (!unpackResult)
+    if (const auto unpackResult = anyPtr->UnpackTo(&resp); !unpackResult)
     {
         std::println(stderr, "Failed to unpack message to FileTransferProposalResp");
         return;
     }
 
-    bool result = resp.result() == proto::Result::ACCEPTED ? true : false;
-
-    if (!result)
+    if (const bool result = resp.result() == proto::Result::ACCEPTED ? true : false; !result)
     {
         std::println("Receiver rejected the file transfer");
+        cleanup();
         return;
     }
 
@@ -155,7 +151,7 @@ void Sender::startFileTransfer()
 {
     const auto& filePath = args_.path;
 
-    auto file = std::make_shared<std::ifstream>(args_.path, std::ios::binary);
+    const auto file = std::make_shared<std::ifstream>(args_.path, std::ios::binary);
 
     if (!file)
     {
@@ -163,19 +159,18 @@ void Sender::startFileTransfer()
         return;
     }
 
-    uint64_t fileSize    = std::filesystem::file_size(filePath);
-    uint64_t totalChunks = (fileSize + CHUNK_SIZE - 1) / CHUNK_SIZE;
+    const uint64_t fileSize    = std::filesystem::file_size(filePath);
+    const uint64_t totalChunks = (fileSize + CHUNK_SIZE - 1) / CHUNK_SIZE;
 
     sendChunk(file, totalChunks, 1);
 }
 
 void Sender::sendChunk(std::shared_ptr<std::ifstream> file, uint64_t totalChunks, uint64_t chunkId)
 {
-    constexpr uint64_t CHUNK_SIZE = 8192U;
     std::vector<char>  chunkBuffer(CHUNK_SIZE);
 
     file->read(chunkBuffer.data(), CHUNK_SIZE);
-    std::streamsize bytesRead = file->gcount();
+    const std::streamsize bytesRead = file->gcount();
 
     if (!bytesRead) return;
 
@@ -203,23 +198,19 @@ void Sender::handleFileTransferComplete(std::unique_ptr<google::protobuf::Any> a
 {
     proto::FileTransferComplete resp;
 
-    auto unpackResult = anyPtr->UnpackTo(&resp);
-
-    if (!unpackResult)
+    if (const auto unpackResult = anyPtr->UnpackTo(&resp); !unpackResult)
     {
         std::println(stderr, "Failed to unpack message to FileTransferComplete");
         return;
     }
 
-    bool result = resp.result() == proto::Result::ACCEPTED ? true : false;
-
-    if (!result)
+    if (const bool result = resp.result() == proto::Result::ACCEPTED ? true : false; !result)
     {
-        std::println("Received FileTransferComplete with result FAILIURE");
+        std::println("Received FileTransferComplete with result FAILURE");
         return;
     }
 
-    std::println("File was transfered successfully");
+    std::println("File was transferred successfully");
 
     connection_->accessMsgReceiver().unsubscribe();
     cleanup();

@@ -15,8 +15,8 @@ namespace p2pft
 class Sender : public IApplication
 {
 public:
-    Sender(cli::SenderArgs args);
-    virtual ~Sender() = default;
+    explicit Sender(cli::SenderArgs args);
+    ~Sender() override = default;
 
 public:
     void run() override;

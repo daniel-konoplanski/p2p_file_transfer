@@ -3,7 +3,6 @@
 #include <string>
 
 #include <boost/asio/io_context.hpp>
-#include <boost/asio/ip/tcp.hpp>
 
 #include <google/protobuf/any.pb.h>
 
@@ -20,8 +19,8 @@ namespace p2pft
 class Receiver : public IApplication
 {
 public:
-    Receiver(cli::ReceiverArgs args);
-    virtual ~Receiver() = default;
+    explicit Receiver(cli::ReceiverArgs args);
+    ~Receiver() override = default;
 
 public:
     void run() override;
