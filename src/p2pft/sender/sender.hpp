@@ -34,6 +34,10 @@ private:
     void startFileTransfer();
     void cleanup();
     void sendChunk(std::shared_ptr<std::ifstream> file, uint64_t totalChunks, uint64_t chunkId);
+    std::error_code establishConnection();
+    void            setupMessageReceiver();
+    std::error_code validateFile();
+    std::error_code sendFileProposal();
 
 private:
     constexpr static uint64_t                CHUNK_SIZE{ 8192U };

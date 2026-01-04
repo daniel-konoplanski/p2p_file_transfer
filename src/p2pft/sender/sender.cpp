@@ -74,24 +74,49 @@ void Sender::run()
 {
     io_ = std::make_shared<boost::asio::io_context>();
 
+    if (const auto ec = establishConnection())
+    {
+        std::println(stderr, "Connection failed: {}", ec.message());
+        return;
+    }
+
+    setupMessageReceiver();
+
+    if (const auto ec = validateFile())
+    {
+        std::println(stderr, "File validation failed: {}", ec.message());
+        return;
+    }
+
+    if (const auto ec = sendFileProposal())
+    {
+        std::println(stderr, "Failed to send file proposal: {}", ec.message());
+        return;
+    }
+
+    auto work_guard = boost::asio::make_work_guard(*io_);
+    io_->run();
+}
+
+std::error_code Sender::establishConnection()
+{
     std::println("Connecting to {}:{}...", args_.address, args_.port);
 
     auto maybeSession = comms::ConnectionManager::connect(io_, args_.address, args_.port);
 
     if (!maybeSession)
     {
-        std::println(
-            stderr,
-            "Failed to connect to receiver with address {}: {}",
-            args_.address,
-            maybeSession.error().message());
-        return;  // TODO: return an error code;
+        return maybeSession.error();
     }
 
     connection_ = std::make_unique<Connection>(*maybeSession);
-
     std::println("Connected to receiver");
 
+    return {};
+}
+
+void Sender::setupMessageReceiver()
+{
     connection_->accessMsgReceiver().subscribe(
         [this](const std::error_code& ec, std::unique_ptr<google::protobuf::Any> anyPtr) {
             if (ec)
@@ -99,55 +124,45 @@ void Sender::run()
                 std::println("Message receiving failed: {}", ec.message());
                 return;
             }
-
             handleMessage(std::move(anyPtr));
         });
+}
 
+std::error_code Sender::validateFile()
+{
     const std::filesystem::path filePath{ args_.path };
+    std::error_code             ec;
 
-    std::error_code ec;
-    const auto      doesFileExist = std::filesystem::exists(filePath, ec);
+    const bool exists = std::filesystem::exists(filePath, ec);
 
-    if (ec)
-    {
-        std::println(stderr, "Failed to read file {}: {}", filePath.string(), ec.message());
-        return;  // TODO: return an error code;
-    }
-
-    if (!doesFileExist)
-    {
-        std::println(stderr, "File does not exist: {}", filePath.string());
-        return;
-    }
-
-    if (ec)
-    {
-        std::println(stderr, "Could not read file size: {}", filePath.string());
-        return;
-    }
-
-    proto::FileInfo fileInfo;
-
-    proto::FileTransferProposalReq req;
-    p2pft::proto::FileInfo*        f = req.mutable_files();
+    if (ec) return ec;
+    if (!exists) return std::make_error_code(std::errc::no_such_file_or_directory);
 
     fileInfo_.fileSize = std::filesystem::file_size(filePath, ec);
-    fileInfo_.fileName = filePath.filename().string();
+    if (ec) return ec;
 
-    f->set_name(filePath.filename().string());
+    fileInfo_.fileName = filePath.filename().string();
+    return {};
+}
+
+std::error_code Sender::sendFileProposal()
+{
+    proto::FileTransferProposalReq req;
+    proto::FileInfo*               f = req.mutable_files();
+
+    f->set_name(fileInfo_.fileName);
     f->set_size(fileInfo_.fileSize);
 
-    connection_->accessMsgSender().send(req, [](const auto& errorCode, auto) {
+    std::error_code sendError;
+
+    connection_->accessMsgSender().send(req, [&sendError](const auto& errorCode, auto) {
         if (errorCode)
         {
-            std::println("Error during message sending: {}", errorCode.message());
-            return;
+            sendError = errorCode;
         }
     });
 
-    auto work_guard = boost::asio::make_work_guard(*io_);
-
-    io_->run();
+    return sendError;
 }
 
 void Sender::handleMessage(std::unique_ptr<google::protobuf::Any> anyPtr)
