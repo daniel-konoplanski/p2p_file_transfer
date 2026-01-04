@@ -27,6 +27,44 @@
 namespace p2pft
 {
 
+namespace
+{
+
+std::string formatBytes(const size_t bytes)
+{
+    const char*   units[] = { "B", "KB", "MB", "GB", "TB", "PB" };
+    constexpr int base    = 1024;
+
+    if (bytes == 0) return "0 B";
+
+    const int unitIndex = std::min(
+        static_cast<int>(std::log(bytes) / std::log(base)),
+        5  // Max index for units array
+    );
+
+    const double value = bytes / std::pow(base, unitIndex);
+
+    std::ostringstream oss;
+
+    if (value >= 100)
+    {
+        oss << std::fixed << std::setprecision(0);
+    }
+    else if (value >= 10)
+    {
+        oss << std::fixed << std::setprecision(1);
+    }
+    else
+    {
+        oss << std::fixed << std::setprecision(2);
+    }
+
+    oss << value << " " << units[unitIndex];
+    return oss.str();
+}
+
+}  // namespace
+
 Sender::Sender(cli::SenderArgs args)
     : args_{ std::move(args) }
 {
@@ -35,6 +73,8 @@ Sender::Sender(cli::SenderArgs args)
 void Sender::run()
 {
     io_ = std::make_shared<boost::asio::io_context>();
+
+    std::println("Connecting to {}:{}...", args_.address, args_.port);
 
     auto maybeSession = comms::ConnectionManager::connect(io_, args_.address, args_.port);
 
@@ -50,12 +90,7 @@ void Sender::run()
 
     connection_ = std::make_unique<Connection>(*maybeSession);
 
-    const auto& remoteEndpoint = connection_->accessSession().socketPtr_->remote_endpoint();
-
-    std::println(
-        "Successfully connected to receiver with address {}:{}",
-        remoteEndpoint.address().to_string(),
-        remoteEndpoint.port());
+    std::println("Connected to receiver");
 
     connection_->accessMsgReceiver().subscribe(
         [this](const std::error_code& ec, std::unique_ptr<google::protobuf::Any> anyPtr) {
@@ -85,8 +120,6 @@ void Sender::run()
         return;
     }
 
-    const auto fileSize = std::filesystem::file_size(filePath, ec);
-
     if (ec)
     {
         std::println(stderr, "Could not read file size: {}", filePath.string());
@@ -98,8 +131,11 @@ void Sender::run()
     proto::FileTransferProposalReq req;
     p2pft::proto::FileInfo*        f = req.mutable_files();
 
+    fileInfo_.fileSize = std::filesystem::file_size(filePath, ec);
+    fileInfo_.fileName = filePath.filename().string();
+
     f->set_name(filePath.filename().string());
-    f->set_size(fileSize);
+    f->set_size(fileInfo_.fileSize);
 
     connection_->accessMsgSender().send(req, [](const auto& errorCode, auto) {
         if (errorCode)
@@ -136,7 +172,7 @@ void Sender::handleFileTransferProposalResp(std::unique_ptr<google::protobuf::An
         return;
     }
 
-    if (const bool result = resp.result() == proto::Result::ACCEPTED ? true : false; !result)
+    if (const bool result = resp.result() == proto::Result::ACCEPTED; !result)
     {
         if (resp.result() == proto::Result::REJECTED)
             std::println("Receiver rejected the file transfer");
@@ -147,7 +183,7 @@ void Sender::handleFileTransferProposalResp(std::unique_ptr<google::protobuf::An
         return;
     }
 
-    std::println("Receiver accepted the request, starting file transfer...");
+    std::println("Sending → {} ({})", fileInfo_.fileName, formatBytes(fileInfo_.fileSize));
     startFileTransfer();
 }
 
@@ -208,13 +244,13 @@ void Sender::handleFileTransferComplete(std::unique_ptr<google::protobuf::Any> a
         return;
     }
 
-    if (const bool result = resp.result() == proto::Result::ACCEPTED ? true : false; !result)
+    if (const bool result = resp.result() == proto::Result::ACCEPTED; !result)
     {
         std::println("Receiver failed the file transfer");
         return;
     }
 
-    std::println("File was transferred successfully");
+    std::println("Transfer completed");
 
     connection_->accessMsgReceiver().unsubscribe();
     cleanup();

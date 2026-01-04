@@ -12,6 +12,12 @@
 namespace p2pft
 {
 
+struct FileInfo
+{
+    uint64_t    fileSize;
+    std::string fileName;
+};
+
 class Sender : public IApplication
 {
 public:
@@ -34,6 +40,7 @@ private:
     cli::SenderArgs                          args_;
     std::shared_ptr<boost::asio::io_context> io_;
     std::unique_ptr<Connection>              connection_;
+    FileInfo                                 fileInfo_;
 };
 
 }  // namespace p2pft

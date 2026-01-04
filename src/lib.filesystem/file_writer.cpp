@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <cstdio>
 #include <fstream>
 #include <print>
 
@@ -19,7 +18,7 @@ FileWriter::FileWriter(const std::string& path, const std::string& fileName)
     file_.stream.open(file_.path, std::ios::binary | std::ios::out);
 }
 
-void FileWriter::write(const std::string& bytes, bool isLast)
+void FileWriter::write(const std::string& bytes, const bool isLast)
 {
     if (buffer_.size() + bytes.size() > BUFFER_SIZE)
     {
@@ -37,7 +36,6 @@ void FileWriter::write(const std::string& bytes, bool isLast)
             file_.stream.write(reinterpret_cast<const char*>(buffer_.data()), buffer_.size());
 
         file_.stream.close();
-        std::println("File written successfully");
     }
 }
 
