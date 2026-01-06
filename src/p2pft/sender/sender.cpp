@@ -24,6 +24,8 @@
 #include "lib.comms/i_receiver.hpp"
 #include "lib.comms/i_sender.hpp"
 
+#include "p2pft/progress_bar/progress_bar.hpp"
+
 namespace p2pft
 {
 
@@ -217,6 +219,8 @@ void Sender::startFileTransfer()
     const uint64_t fileSize    = std::filesystem::file_size(filePath);
     const uint64_t totalChunks = (fileSize + CHUNK_SIZE - 1) / CHUNK_SIZE;
 
+    progressBar_ = std::make_unique<ProgressBar>(totalChunks);
+
     sendChunk(file, totalChunks, 1);
 }
 
@@ -227,7 +231,11 @@ void Sender::sendChunk(std::shared_ptr<std::ifstream> file, uint64_t totalChunks
     file->read(chunkBuffer.data(), CHUNK_SIZE);
     const std::streamsize bytesRead = file->gcount();
 
-    if (!bytesRead) return;
+    if (!bytesRead)
+    {
+        progressBar_.reset();
+        return;
+    };
 
     proto::FileChunk fileChunkMsg;
     fileChunkMsg.set_id(chunkId);
@@ -243,8 +251,8 @@ void Sender::sendChunk(std::shared_ptr<std::ifstream> file, uint64_t totalChunks
                 std::println(stderr, "Message sending failed {}", ec.message());
                 return;
             }
-
             ++chunkId;
+            progressBar_->add(1);
             sendChunk(file, totalChunks, chunkId);
         });
 }

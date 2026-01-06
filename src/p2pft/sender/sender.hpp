@@ -8,6 +8,7 @@
 
 #include "p2pft/application.hpp"
 #include "p2pft/connection/connection.hpp"
+#include "p2pft/progress_bar/progress_bar.hpp"
 
 namespace p2pft
 {
@@ -45,6 +46,7 @@ private:
     std::shared_ptr<boost::asio::io_context> io_;
     std::unique_ptr<Connection>              connection_;
     FileInfo                                 fileInfo_;
+    std::unique_ptr<ProgressBar>             progressBar_;
 };
 
 }  // namespace p2pft

@@ -12,12 +12,20 @@
 
 #include "p2pft/application.hpp"
 #include "p2pft/connection/connection.hpp"
+#include "p2pft/progress_bar/progress_bar.hpp"
 
 namespace p2pft
 {
 
 class Receiver : public IApplication
 {
+private:
+    struct FileInfo
+    {
+        std::string name_;
+        uint64_t size_;
+    };
+
 public:
     explicit Receiver(cli::ReceiverArgs args);
     ~Receiver() override = default;
@@ -35,9 +43,10 @@ private:
 
 private:
     cli::ReceiverArgs                        args_;
-    std::string                              fileName_;
+    FileInfo fileInfo_;
     std::shared_ptr<boost::asio::io_context> io_;
     std::unique_ptr<Connection>              connection_;
+    std::unique_ptr<ProgressBar>             progressBar_;
 };
 
 }  // namespace p2pft

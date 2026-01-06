@@ -145,21 +145,21 @@ void Receiver::handleFileTransferProposalReq(std::unique_ptr<google::protobuf::A
         return;
     }
 
-    fileName_     = req.files().name();
-    auto fileSize = req.files().size();
+    fileInfo_.name_ = req.files().name();
+    fileInfo_.size_ = req.files().size();
 
-    if (auto spaceInfo = std::filesystem::space(args_.outDir); spaceInfo.available < fileSize)
+    if (auto spaceInfo = std::filesystem::space(args_.outDir); spaceInfo.available < fileInfo_.size_)
     {
         std::println(
             stderr,
             "Not enough available space in the provided location {}, needed: {}, available: {}",
             args_.outDir,
-            fileSize,
+            fileInfo_.size_,
             spaceInfo.available);
         return;
     }
 
-    std::println("Proposal: {} — {}", formatBytes(fileSize), fileName_);
+    std::println("Proposal: {} — {}", formatBytes(fileInfo_.size_), fileInfo_.name_);
 
     sendFileTransferProposalResp();
 }
@@ -177,16 +177,21 @@ void Receiver::handleFileChunk(std::unique_ptr<google::protobuf::Any> anyPtr)
         return;
     }
 
+    if (!progressBar_)
+        progressBar_ = std::make_unique<ProgressBar>(fileInfo_.size_);
+
+
     const bool  isLast = msg.is_last();
     const auto& data   = msg.data();
 
-    static auto fileWriter = std::make_unique<files::FileWriter>(args_.outDir, fileName_);
+    static auto fileWriter = std::make_unique<files::FileWriter>(args_.outDir, fileInfo_.name_);
     fileWriter->write(data, isLast);
+    progressBar_->add(data.size());
 
     if (isLast)
     {
         fileWriter = nullptr;
-        std::println("File saved: {}", args_.outDir + "/" + fileName_);
+        std::println("File saved: {}", args_.outDir + "/" + fileInfo_.name_);
         sendFileTransferComplete(ACCEPTED);
     }
 }
