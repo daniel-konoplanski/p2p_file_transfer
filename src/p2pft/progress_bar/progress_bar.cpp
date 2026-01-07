@@ -1,6 +1,6 @@
-#include <print>
-
 #include "progress_bar.hpp"
+
+#include <print>
 
 namespace p2pft
 {
@@ -10,15 +10,14 @@ ProgressBar::ProgressBar(const uint64_t total)
     using namespace indicators::option;
 
     bar_ = std::make_unique<indicators::ProgressBar>(
-        BarWidth{30},
-        Start{"["},
-        End{"]"},
-        Fill{"█"},
-        Lead{"█"},
-        ShowPercentage{true},
-        ShowElapsedTime{true},
-        ShowRemainingTime{true}
-    );
+        BarWidth{ 30 },
+        Start{ "[" },
+        End{ "]" },
+        Fill{ "█" },
+        Lead{ "█" },
+        ShowPercentage{ true },
+        ShowElapsedTime{ true },
+        ShowRemainingTime{ true });
 
     progress_.total = total;
 }

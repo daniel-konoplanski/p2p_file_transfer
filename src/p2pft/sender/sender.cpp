@@ -19,12 +19,11 @@
 #include "lib.cli/parser.hpp"
 
 #include "p2pft/connection/connection.hpp"
+#include "p2pft/progress_bar/progress_bar.hpp"
 
 #include "lib.comms/connection_manager/connection_manager.hpp"
 #include "lib.comms/i_receiver.hpp"
 #include "lib.comms/i_sender.hpp"
-
-#include "p2pft/progress_bar/progress_bar.hpp"
 
 namespace p2pft
 {

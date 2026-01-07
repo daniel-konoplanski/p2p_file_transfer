@@ -46,8 +46,8 @@ bool getUserConfirmation()
 
 std::string formatBytes(const size_t bytes)
 {
-    const char*   units[] = { "B", "KB", "MB", "GB", "TB", "PB" };
-    constexpr int base    = 1024;
+    constexpr std::array units{ "B", "KB", "MB", "GB", "TB", "PB" };
+    constexpr uint32_t   base{ 1024U };
 
     if (bytes == 0) return "0 B";
 
@@ -148,7 +148,8 @@ void Receiver::handleFileTransferProposalReq(std::unique_ptr<google::protobuf::A
     fileInfo_.name_ = req.files().name();
     fileInfo_.size_ = req.files().size();
 
-    if (auto spaceInfo = std::filesystem::space(args_.outDir); spaceInfo.available < fileInfo_.size_)
+    if (auto spaceInfo = std::filesystem::space(args_.outDir);
+        spaceInfo.available < fileInfo_.size_)
     {
         std::println(
             stderr,
@@ -177,9 +178,7 @@ void Receiver::handleFileChunk(std::unique_ptr<google::protobuf::Any> anyPtr)
         return;
     }
 
-    if (!progressBar_)
-        progressBar_ = std::make_unique<ProgressBar>(fileInfo_.size_);
-
+    if (!progressBar_) progressBar_ = std::make_unique<ProgressBar>(fileInfo_.size_);
 
     const bool  isLast = msg.is_last();
     const auto& data   = msg.data();

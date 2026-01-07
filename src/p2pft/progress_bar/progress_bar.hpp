@@ -19,8 +19,8 @@ public:
     void add(uint64_t value);
 
 private:
-    Progress progress_{};
+    Progress                                 progress_{};
     std::unique_ptr<indicators::ProgressBar> bar_{};
 };
 
-}
+}  // namespace p2pft

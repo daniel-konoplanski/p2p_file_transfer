@@ -23,7 +23,7 @@ private:
     struct FileInfo
     {
         std::string name_;
-        uint64_t size_;
+        uint64_t    size_;
     };
 
 public:
@@ -43,7 +43,7 @@ private:
 
 private:
     cli::ReceiverArgs                        args_;
-    FileInfo fileInfo_;
+    FileInfo                                 fileInfo_;
     std::shared_ptr<boost::asio::io_context> io_;
     std::unique_ptr<Connection>              connection_;
     std::unique_ptr<ProgressBar>             progressBar_;
