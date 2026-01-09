@@ -20,5 +20,6 @@ find_package(OpenSSL REQUIRED)
 find_package(GTest REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(Protobuf REQUIRED)
+find_package(Botan REQUIRED)
 
 add_subdirectory(src)
