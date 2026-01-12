@@ -15,11 +15,20 @@ enum ExitCodes : int
 
 int main(int argc, char* argv[])
 {
-    auto args = cli::Parser::parse(argc, argv);
+    CLI::App cliApp{ "P2P File Transfer" };
+
+    auto maybeArgs = cli::Parser::parse(cliApp, argc, argv);
+
+    if (!maybeArgs)
+    {
+        return cliApp.exit(maybeArgs.error());
+    }
+
+    auto args = maybeArgs.value();
 
     if (std::holds_alternative<std::nullopt_t>(args))
     {
-        std::println("Failed to parse the arguments");
+        std::println(stderr, "Failed to parse the arguments");
         return ExitCodes::INVALID_ARGUMENTS;
     }
 
@@ -34,5 +43,4 @@ int main(int argc, char* argv[])
     app->run();
 
     return ExitCodes::SUCCESS;
-    // TODO: robably do return app->run()
 }

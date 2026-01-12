@@ -1,24 +1,21 @@
 #include "parser.hpp"
-
-#include <optional>
+#include <expected>
 
 #include <CLI/CLI.hpp>
 
 namespace cli
 {
 
-CliArgs Parser::parse(const int argc, char* argv[])
+std::expected<CliArgs, CLI::ParseError> Parser::parse(CLI::App& app, const int argc, char* argv[])
 {
-    CLI::App app{ "P2P File Transfer" };
-
     std::string address;
     std::string path;
-    uint16_t    port = 52000;
+    uint16_t port;
 
     const auto send = app.add_subcommand("send", "Send files to a receiver");
-    send->add_option("-t,--target", address, "Address of the receiver")->required();
-    send->add_option("-i,--input", path, "File to transfer")->required();
-    send->add_option("-p,--port", port, "Port number");
+    send->add_option("-a,--address", address, "Address of the receiver")->required();
+    send->add_option("-f,--file", path, "File to transfer")->required();
+    send->add_option("-p,--port", port, "Port number")->required();
 
     const auto receive = app.add_subcommand("receive", "Receive files from a sender");
     receive->add_option("-o,--out-dir", path, "Port number")->required();
@@ -30,7 +27,7 @@ CliArgs Parser::parse(const int argc, char* argv[])
     }
     catch (const CLI::ParseError& e)
     {
-        return std::nullopt;
+        return std::unexpected<CLI::ParseError>(e);
     }
 
     CliArgs cliArgs{};
