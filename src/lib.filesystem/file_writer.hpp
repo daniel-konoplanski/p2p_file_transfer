@@ -14,8 +14,8 @@ class FileWriter
 private:
     struct File
     {
-        std::string   name;
-        std::string   path;
+        std::string name;
+        std::string path;
         std::ofstream stream;
     };
 
@@ -27,8 +27,8 @@ public:
 
 private:
     constexpr static uint64_t BUFFER_SIZE{ 4'000'000U };
-    std::vector<std::byte>    buffer_;
-    File                      file_;
+    std::vector<std::byte> buffer_;
+    File file_;
 };
 
 }  // namespace p2pft::files

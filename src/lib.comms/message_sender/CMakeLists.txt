@@ -1,6 +1,7 @@
 add_library(message_sender OBJECT message_sender.cpp)
 
 target_link_libraries(message_sender
+    PRIVATE connection_manager
     PRIVATE Boost::asio
     PRIVATE protobuf::libprotobuf)
 

@@ -15,7 +15,7 @@ namespace p2pft
 
 struct FileInfo
 {
-    uint64_t    fileSize;
+    uint64_t fileSize;
     std::string fileName;
 };
 
@@ -36,17 +36,17 @@ private:
     void cleanup();
     void sendChunk(std::shared_ptr<std::ifstream> file, uint64_t totalChunks, uint64_t chunkId);
     std::error_code establishConnection();
-    void            setupMessageReceiver();
+    void setupMessageReceiver();
     std::error_code validateFile();
     std::error_code sendFileProposal();
 
 private:
-    constexpr static uint64_t                CHUNK_SIZE{ 8192U };
-    cli::SenderArgs                          args_;
+    constexpr static uint64_t CHUNK_SIZE{ 8192U };
+    cli::SenderArgs args_;
     std::shared_ptr<boost::asio::io_context> io_;
-    std::unique_ptr<Connection>              connection_;
-    FileInfo                                 fileInfo_;
-    std::unique_ptr<ProgressBar>             progressBar_;
+    std::unique_ptr<Connection> connection_;
+    FileInfo fileInfo_;
+    std::unique_ptr<ProgressBar> progressBar_;
 };
 
 }  // namespace p2pft

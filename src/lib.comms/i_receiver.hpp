@@ -10,8 +10,7 @@
 namespace p2pft::comms
 {
 
-using ReceiverCallback =
-    std::function<void(const std::error_code&, std::unique_ptr<google::protobuf::Any>)>;
+using ReceiverCallback = std::function<void(const std::error_code&, std::unique_ptr<google::protobuf::Any>)>;
 
 class IMessageReceiver
 {

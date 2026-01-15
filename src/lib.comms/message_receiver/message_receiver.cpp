@@ -9,7 +9,7 @@
 
 #include <google/protobuf/message.h>
 
-#include "lib.comms/session.hpp"
+#include "../connection_manager/session.hpp"
 
 namespace p2pft::comms
 {
@@ -33,8 +33,6 @@ void MessageReceiver::unsubscribe()
 
 void MessageReceiver::readHeader()
 {
-    const auto& socketPtr = session_->socketPtr_;
-
     auto processBody = [this](const std::error_code ec, auto) {
         if (ec)
         {
@@ -47,13 +45,11 @@ void MessageReceiver::readHeader()
         readBody(size);
     };
 
-    boost::asio::async_read(*socketPtr, boost::asio::buffer(headerBuffer_), processBody);
+    boost::asio::async_read(session_->accessSslSocket(), boost::asio::buffer(headerBuffer_), processBody);
 }
 
 void MessageReceiver::readBody(uint64_t size)
 {
-    const auto& socketPtr = session_->socketPtr_;
-
     buffer_.clear();
     buffer_.resize(size);
 
@@ -66,8 +62,7 @@ void MessageReceiver::readBody(uint64_t size)
 
         auto anyPtr = std::make_unique<google::protobuf::Any>();
 
-        if (const auto parseResult = anyPtr->ParseFromArray(buffer_.data(), static_cast<int>(size));
-            !parseResult)
+        if (const auto parseResult = anyPtr->ParseFromArray(buffer_.data(), static_cast<int>(size)); !parseResult)
         {
             std::println(stderr, "Failed to unpack the received message");
             return;
@@ -78,7 +73,7 @@ void MessageReceiver::readBody(uint64_t size)
         if (!stop_) readHeader();
     };
 
-    boost::asio::async_read(*socketPtr, boost::asio::buffer(buffer_), getMessage);
+    boost::asio::async_read(session_->accessSslSocket(), boost::asio::buffer(buffer_), getMessage);
 }
 
 }  // namespace p2pft::comms

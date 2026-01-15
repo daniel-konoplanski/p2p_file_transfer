@@ -1,4 +1,5 @@
 #include "parser.hpp"
+
 #include <expected>
 
 #include <CLI/CLI.hpp>
@@ -31,8 +32,7 @@ std::expected<CliArgs, CLI::ParseError> Parser::parse(CLI::App& app, const int a
     }
 
     CliArgs cliArgs{};
-    cliArgs = send->parsed() ? cliArgs = SenderArgs{ address, path, port }
-                             : cliArgs = ReceiverArgs{ path, port };
+    cliArgs = send->parsed() ? cliArgs = SenderArgs{ address, path, port } : cliArgs = ReceiverArgs{ path, port };
 
     return cliArgs;
 }

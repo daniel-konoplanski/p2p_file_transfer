@@ -1,6 +1,7 @@
 #include "connection.hpp"
 
 #include <memory>
+#include <print>
 
 #include "lib.comms/message_receiver/message_receiver.hpp"
 #include "lib.comms/message_sender/message_sender.hpp"
@@ -20,7 +21,21 @@ Connection::~Connection()
     messageReceiver_.reset();
     messageSender_.reset();
 
-    if (const auto& socket = session_->socketPtr_; socket->is_open()) socket->close();
+    auto& sslStream = session_->accessSslSocket();
+
+    boost::system::error_code ec;
+    sslStream.shutdown(ec);
+
+    if (ec)
+    {
+        std::println(stderr, "Failed to shutdown SSL stream: {}", ec.message());
+        return;
+    }
+
+    if (auto& socket = sslStream.lowest_layer(); !socket.is_open())
+    {
+        socket.close();
+    }
 
     session_.reset();
 }

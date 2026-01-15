@@ -1,14 +1,9 @@
 #include "message_sender.hpp"
 
-#include <cstdint>
-
-#include <boost/asio/registered_buffer.hpp>
 #include <boost/asio/write.hpp>
 
 #include <google/protobuf/any.pb.h>
 #include <google/protobuf/message.h>
-
-#include "lib.comms/session.hpp"
 
 namespace p2pft::comms
 {
@@ -33,9 +28,7 @@ void MessageSender::send(const google::protobuf::Message& message, SenderCallbac
 
     any.SerializeToArray(buffer_.data() + sizeof(headerSize), static_cast<int>(anySize));
 
-    const auto& socketPtr = session_->socketPtr_;
-
-    boost::asio::async_write(*socketPtr, boost::asio::buffer(buffer_), callback);
+    boost::asio::async_write(session_->accessSslSocket(), boost::asio::buffer(buffer_), callback);
 }
 
 }  // namespace p2pft::comms

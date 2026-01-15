@@ -1,10 +1,10 @@
 #pragma once
 
 #include <cstdint>
+#include <expected>
 #include <optional>
 #include <string>
 #include <variant>
-#include <expected>
 
 #include <CLI/CLI.hpp>
 

@@ -2,12 +2,11 @@
 
 #include <array>
 #include <functional>
-#include <memory>
 
 #include <google/protobuf/any.pb.h>
 
+#include "lib.comms/connection_manager/session.hpp"
 #include "lib.comms/i_receiver.hpp"
-#include "lib.comms/session.hpp"
 
 namespace p2pft::comms
 {
@@ -24,11 +23,11 @@ private:
     void readBody(uint64_t size);
 
 private:
-    bool                     stop_{};
+    bool stop_{};
     std::array<std::byte, 8> headerBuffer_{};
-    std::vector<std::byte>   buffer_;
-    SessionPtr               session_;
-    ReceiverCallback         callback_;
+    std::vector<std::byte> buffer_;
+    SessionPtr session_;
+    ReceiverCallback callback_;
 };
 
 }  // namespace p2pft::comms

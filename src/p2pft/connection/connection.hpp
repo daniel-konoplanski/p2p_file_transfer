@@ -2,9 +2,9 @@
 
 #include <memory>
 
+#include "../../lib.comms/connection_manager/session.hpp"
 #include "lib.comms/i_receiver.hpp"
 #include "lib.comms/i_sender.hpp"
-#include "lib.comms/session.hpp"
 
 namespace p2pft
 {
@@ -16,13 +16,13 @@ public:
     ~Connection();
 
 public:
-    comms::IMessageSender&   accessMsgSender() const;
+    comms::IMessageSender& accessMsgSender() const;
     comms::IMessageReceiver& accessMsgReceiver() const;
-    p2pft::comms::Session&   accessSession() const;
+    p2pft::comms::Session& accessSession() const;
 
 private:
-    std::shared_ptr<p2pft::comms::Session>   session_{};
-    std::unique_ptr<comms::IMessageSender>   messageSender_{};
+    std::shared_ptr<p2pft::comms::Session> session_{};
+    std::unique_ptr<comms::IMessageSender> messageSender_{};
     std::unique_ptr<comms::IMessageReceiver> messageReceiver_{};
 };
 

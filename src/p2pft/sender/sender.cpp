@@ -21,6 +21,7 @@
 #include "p2pft/connection/connection.hpp"
 #include "p2pft/progress_bar/progress_bar.hpp"
 
+#include "lib.certs/certificate_manager.hpp"
 #include "lib.comms/connection_manager/connection_manager.hpp"
 #include "lib.comms/i_receiver.hpp"
 #include "lib.comms/i_sender.hpp"
@@ -33,8 +34,8 @@ namespace
 
 std::string formatBytes(const size_t bytes)
 {
-    const char*   units[] = { "B", "KB", "MB", "GB", "TB", "PB" };
-    constexpr int base    = 1024;
+    const char* units[] = { "B", "KB", "MB", "GB", "TB", "PB" };
+    constexpr int base  = 1024;
 
     if (bytes == 0) return "0 B";
 
@@ -73,6 +74,8 @@ Sender::Sender(cli::SenderArgs args)
 
 void Sender::run()
 {
+    if (!cert::CertificateManager::isCertCreated()) cert::CertificateManager::create();
+
     io_ = std::make_shared<boost::asio::io_context>();
 
     if (const auto ec = establishConnection())
@@ -132,7 +135,7 @@ void Sender::setupMessageReceiver()
 std::error_code Sender::validateFile()
 {
     const std::filesystem::path filePath{ args_.path };
-    std::error_code             ec;
+    std::error_code ec;
 
     const bool exists = std::filesystem::exists(filePath, ec);
 
@@ -149,7 +152,7 @@ std::error_code Sender::validateFile()
 std::error_code Sender::sendFileProposal()
 {
     proto::FileTransferProposalReq req;
-    proto::FileInfo*               f = req.mutable_files();
+    proto::FileInfo* f = req.mutable_files();
 
     f->set_name(fileInfo_.fileName);
     f->set_size(fileInfo_.fileSize);

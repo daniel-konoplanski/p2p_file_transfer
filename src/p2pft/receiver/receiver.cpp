@@ -6,7 +6,6 @@
 #include <memory>
 #include <print>
 #include <string>
-#include <system_error>
 #include <utility>
 
 #include <boost/asio.hpp>
@@ -19,6 +18,7 @@
 
 #include "p2pft/connection/connection.hpp"
 
+#include "lib.certs/certificate_manager.hpp"
 #include "lib.comms/connection_manager/connection_manager.hpp"
 #include "lib.comms/i_receiver.hpp"
 #include "lib.comms/message_receiver/message_receiver.hpp"
@@ -39,15 +39,15 @@ bool getUserConfirmation()
     std::string response;
     std::getline(std::cin, response);
 
-    std::ranges::transform(response, response.begin(), ::tolower);
+    std::ranges::transform(response, response.begin(), tolower);
 
-    return response == "yes" || response == "y" || response == "Y";
+    return response == "yes" || response == "y";
 }
 
 std::string formatBytes(const size_t bytes)
 {
     constexpr std::array units{ "B", "KB", "MB", "GB", "TB", "PB" };
-    constexpr uint32_t   base{ 1024U };
+    constexpr uint32_t base{ 1024U };
 
     if (bytes == 0) return "0 B";
 
@@ -86,6 +86,8 @@ Receiver::Receiver(cli::ReceiverArgs args)
 
 void Receiver::run()
 {
+    if (!cert::CertificateManager::isCertCreated()) cert::CertificateManager::create();
+
     io_ = std::make_shared<boost::asio::io_context>();
 
     std::println("Listening on 0.0.0.0:{}...", args_.port);
@@ -100,12 +102,9 @@ void Receiver::run()
 
     connection_ = std::make_unique<Connection>(*maybeSession);
 
-    const auto& remoteEndpoint = connection_->accessSession().socketPtr_->remote_endpoint();
+    const auto& remoteEndpoint = connection_->accessSession().getRemoteEndpoint();
 
-    std::println(
-        "Incoming connection from {}:{}",
-        remoteEndpoint.address().to_string(),
-        remoteEndpoint.port());
+    std::println("Incoming connection from {}:{}", remoteEndpoint.address().to_string(), remoteEndpoint.port());
 
     connection_->accessMsgReceiver().subscribe(
         [this](const std::error_code& ec, std::unique_ptr<google::protobuf::Any> anyPtr) {
@@ -148,8 +147,7 @@ void Receiver::handleFileTransferProposalReq(std::unique_ptr<google::protobuf::A
     fileInfo_.name_ = req.files().name();
     fileInfo_.size_ = req.files().size();
 
-    if (auto spaceInfo = std::filesystem::space(args_.outDir);
-        spaceInfo.available < fileInfo_.size_)
+    if (auto spaceInfo = std::filesystem::space(args_.outDir); spaceInfo.available < fileInfo_.size_)
     {
         std::println(
             stderr,
@@ -180,8 +178,8 @@ void Receiver::handleFileChunk(std::unique_ptr<google::protobuf::Any> anyPtr)
 
     if (!progressBar_) progressBar_ = std::make_unique<ProgressBar>(fileInfo_.size_);
 
-    const bool  isLast = msg.is_last();
-    const auto& data   = msg.data();
+    const bool isLast = msg.is_last();
+    const auto& data  = msg.data();
 
     static auto fileWriter = std::make_unique<files::FileWriter>(args_.outDir, fileInfo_.name_);
     fileWriter->write(data, isLast);

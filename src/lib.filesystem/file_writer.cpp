@@ -32,8 +32,7 @@ void FileWriter::write(const std::string& bytes, const bool isLast)
 
     if (isLast)
     {
-        if (!buffer_.empty())
-            file_.stream.write(reinterpret_cast<const char*>(buffer_.data()), buffer_.size());
+        if (!buffer_.empty()) file_.stream.write(reinterpret_cast<const char*>(buffer_.data()), buffer_.size());
 
         file_.stream.close();
     }
