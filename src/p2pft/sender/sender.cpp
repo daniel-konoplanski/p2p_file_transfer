@@ -253,9 +253,8 @@ void Sender::sendChunk(std::shared_ptr<std::ifstream> file, uint64_t totalChunks
                 std::println(stderr, "Message sending failed {}", ec.message());
                 return;
             }
-            ++chunkId;
-            progressBar_->add(1);
-            sendChunk(file, totalChunks, chunkId);
+            progressBar_->add(chunkId);
+            sendChunk(file, totalChunks, ++chunkId);
         });
 }
 

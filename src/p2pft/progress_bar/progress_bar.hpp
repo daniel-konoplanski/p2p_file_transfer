@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <indicators/progress_bar.hpp>
 
 namespace p2pft
@@ -17,6 +18,7 @@ private:
 public:
     explicit ProgressBar(uint64_t total);
     void add(uint64_t value);
+    uint64_t getCurrent();
 
 private:
     Progress progress_{};

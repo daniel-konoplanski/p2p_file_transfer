@@ -10,11 +10,11 @@ ProgressBar::ProgressBar(const uint64_t total)
     using namespace indicators::option;
 
     bar_ = std::make_unique<indicators::ProgressBar>(
-        BarWidth{ 30 },
+        BarWidth{ 40 },
         Start{ "[" },
         End{ "]" },
-        Fill{ "█" },
-        Lead{ "█" },
+        Fill{ "#" },
+        Lead{ "#" },
         ShowPercentage{ true },
         ShowElapsedTime{ true },
         ShowRemainingTime{ true });
@@ -22,10 +22,20 @@ ProgressBar::ProgressBar(const uint64_t total)
     progress_.total = total;
 }
 
-void ProgressBar::add(const uint64_t value)
+void ProgressBar::add(const uint64_t current)
 {
-    progress_.done += value;
+    progress_.done = current;
     bar_->set_progress(static_cast<double>(progress_.done) / progress_.total * 100.0);
+
+    if (progress_.done >= progress_.total && !bar_->is_completed())
+    {
+        bar_->mark_as_completed();
+    }
+}
+
+uint64_t ProgressBar::getCurrent()
+{
+    return progress_.done;
 }
 
 }  // namespace p2pft

@@ -21,7 +21,6 @@
 #include "lib.certs/certificate_manager.hpp"
 #include "lib.comms/connection_manager/connection_manager.hpp"
 #include "lib.comms/i_receiver.hpp"
-#include "lib.comms/message_receiver/message_receiver.hpp"
 #include "lib.comms/message_sender/message_sender.hpp"
 #include "lib.filesystem/file_writer.hpp"
 #include "proto/FileChunk.pb.h"
