@@ -4,6 +4,7 @@ add_subdirectory(lib.cli)
 add_subdirectory(lib.comms)
 add_subdirectory(lib.filesystem)
 add_subdirectory(lib.certs)
+add_subdirectory(lib.utils)
 
 add_executable(
         p2p_ft main.cpp
@@ -18,6 +19,7 @@ target_link_libraries(p2p_ft
     PUBLIC cli
     PUBLIC comms
     PUBLIC filesystem
+    PUBLIC utils
     PUBLIC Boost::asio
     PUBLIC Boost::system
     PUBLIC protobuf::libprotobuf

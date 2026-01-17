@@ -13,8 +13,11 @@
 
 #include <google/protobuf/any.pb.h>
 
+#include <proto/FileChunk.pb.h>
+#include <proto/FileTransferComplete.pb.h>
 #include <proto/FileTransferProposalReq.pb.h>
 #include <proto/FileTransferProposalResp.pb.h>
+#include <proto/Result.pb.h>
 
 #include "p2pft/connection/connection.hpp"
 
@@ -23,9 +26,7 @@
 #include "lib.comms/i_receiver.hpp"
 #include "lib.comms/message_sender/message_sender.hpp"
 #include "lib.filesystem/file_writer.hpp"
-#include "proto/FileChunk.pb.h"
-#include "proto/FileTransferComplete.pb.h"
-#include "proto/Result.pb.h"
+#include "lib.utils/format.hpp"
 
 namespace p2pft
 {
@@ -41,39 +42,6 @@ bool getUserConfirmation()
     std::ranges::transform(response, response.begin(), tolower);
 
     return response == "yes" || response == "y";
-}
-
-std::string formatBytes(const size_t bytes)
-{
-    constexpr std::array units{ "B", "KB", "MB", "GB", "TB", "PB" };
-    constexpr uint32_t base{ 1024U };
-
-    if (bytes == 0) return "0 B";
-
-    const int unitIndex = std::min(
-        static_cast<int>(std::log(bytes) / std::log(base)),
-        5  // Max index for units array
-    );
-
-    const double value = bytes / std::pow(base, unitIndex);
-
-    std::ostringstream oss;
-
-    if (value >= 100)
-    {
-        oss << std::fixed << std::setprecision(0);
-    }
-    else if (value >= 10)
-    {
-        oss << std::fixed << std::setprecision(1);
-    }
-    else
-    {
-        oss << std::fixed << std::setprecision(2);
-    }
-
-    oss << value << " " << units[unitIndex];
-    return oss.str();
 }
 
 }  // namespace
@@ -157,7 +125,7 @@ void Receiver::handleFileTransferProposalReq(std::unique_ptr<google::protobuf::A
         return;
     }
 
-    std::println("Proposal: {} — {}", formatBytes(fileInfo_.size_), fileInfo_.name_);
+    std::println("Proposal: {} — {}", utils::formatBytes(fileInfo_.size_), fileInfo_.name_);
 
     sendFileTransferProposalResp();
 }
