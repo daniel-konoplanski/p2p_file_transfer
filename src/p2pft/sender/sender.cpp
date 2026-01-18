@@ -2,6 +2,7 @@
 
 #include <cstdio>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <ios>
 #include <memory>
@@ -19,56 +20,20 @@
 #include "lib.cli/parser.hpp"
 
 #include "p2pft/connection/connection.hpp"
-#include "p2pft/progress_bar/progress_bar.hpp"
 
 #include "lib.certs/certificate_manager.hpp"
 #include "lib.comms/connection_manager/connection_manager.hpp"
 #include "lib.comms/i_receiver.hpp"
 #include "lib.comms/i_sender.hpp"
+#include "lib.ui/console_user_interface.hpp"
+#include "lib.utils/format.hpp"
 
 namespace p2pft
 {
 
-namespace
-{
-
-std::string formatBytes(const size_t bytes)
-{
-    const char* units[] = { "B", "KB", "MB", "GB", "TB", "PB" };
-    constexpr int base  = 1024;
-
-    if (bytes == 0) return "0 B";
-
-    const int unitIndex = std::min(
-        static_cast<int>(std::log(bytes) / std::log(base)),
-        5  // Max index for units array
-    );
-
-    const double value = bytes / std::pow(base, unitIndex);
-
-    std::ostringstream oss;
-
-    if (value >= 100)
-    {
-        oss << std::fixed << std::setprecision(0);
-    }
-    else if (value >= 10)
-    {
-        oss << std::fixed << std::setprecision(1);
-    }
-    else
-    {
-        oss << std::fixed << std::setprecision(2);
-    }
-
-    oss << value << " " << units[unitIndex];
-    return oss.str();
-}
-
-}  // namespace
-
 Sender::Sender(cli::SenderArgs args)
     : args_{ std::move(args) }
+    , ui_{ std::make_unique<ui::ConsoleUserInterface>() }
 {
 }
 
@@ -80,7 +45,7 @@ void Sender::run()
 
     if (const auto ec = establishConnection())
     {
-        std::println(stderr, "Connection failed: {}", ec.message());
+        ui_->displayError(std::format("Connection failed: {}", ec.message()));
         return;
     }
 
@@ -88,13 +53,13 @@ void Sender::run()
 
     if (const auto ec = validateFile())
     {
-        std::println(stderr, "File validation failed: {}", ec.message());
+        ui_->displayError(std::format("File validation failed: {}", ec.message()));
         return;
     }
 
     if (const auto ec = sendFileProposal())
     {
-        std::println(stderr, "Failed to send file proposal: {}", ec.message());
+        ui_->displayError(std::format("Failed to send file proposal: {}", ec.message()));
         return;
     }
 
@@ -104,7 +69,7 @@ void Sender::run()
 
 std::error_code Sender::establishConnection()
 {
-    std::println("Connecting to {}:{}...", args_.address, args_.port);
+    ui_->displayMessage(std::format("Connecting to {}:{}...", args_.address, args_.port));
 
     auto maybeSession = comms::ConnectionManager::connect(io_, args_.address, args_.port);
 
@@ -114,7 +79,7 @@ std::error_code Sender::establishConnection()
     }
 
     connection_ = std::make_unique<Connection>(*maybeSession);
-    std::println("Connected to receiver");
+    ui_->displayMessage(std::format("Connected to receiver"));
 
     return {};
 }
@@ -125,7 +90,7 @@ void Sender::setupMessageReceiver()
         [this](const std::error_code& ec, std::unique_ptr<google::protobuf::Any> anyPtr) {
             if (ec)
             {
-                std::println("Message receiving failed: {}", ec.message());
+                ui_->displayError(std::format("Message receiving failed: {}", ec.message()));
                 return;
             }
             handleMessage(std::move(anyPtr));
@@ -187,22 +152,22 @@ void Sender::handleFileTransferProposalResp(std::unique_ptr<google::protobuf::An
 
     if (const auto unpackResult = anyPtr->UnpackTo(&resp); !unpackResult)
     {
-        std::println(stderr, "Failed to unpack message to FileTransferProposalResp");
+        ui_->displayError("Failed to unpack message to FileTransferProposalResp");
         return;
     }
 
     if (const bool result = resp.result() == proto::Result::ACCEPTED; !result)
     {
         if (resp.result() == proto::Result::REJECTED)
-            std::println("Receiver rejected the file transfer");
+            ui_->displayMessage("Receiver rejected the file transfer");
         else if (resp.result() == proto::Result::FAILED)
-            std::println("Receiver failed the file transfer");
+            ui_->displayMessage("Receiver failed the file transfer");
 
         cleanup();
         return;
     }
 
-    std::println("Sending → {} ({})", fileInfo_.fileName, formatBytes(fileInfo_.fileSize));
+    ui_->displayMessage(std::format("Sending → {} ({})", fileInfo_.fileName, utils::formatBytes(fileInfo_.fileSize)));
     startFileTransfer();
 }
 
@@ -214,14 +179,14 @@ void Sender::startFileTransfer()
 
     if (!file)
     {
-        std::println(stderr, "Failed to open file: {}", filePath);
+        ui_->displayError(std::format("Failed to open file: {}", filePath));
         return;
     }
 
     const uint64_t fileSize    = std::filesystem::file_size(filePath);
     const uint64_t totalChunks = (fileSize + CHUNK_SIZE - 1) / CHUNK_SIZE;
 
-    progressBar_ = std::make_unique<ProgressBar>(totalChunks);
+    ui_->createProgressTracker(totalChunks);
 
     sendChunk(file, totalChunks, 1);
 }
@@ -233,11 +198,7 @@ void Sender::sendChunk(std::shared_ptr<std::ifstream> file, uint64_t totalChunks
     file->read(chunkBuffer.data(), CHUNK_SIZE);
     const std::streamsize bytesRead = file->gcount();
 
-    if (!bytesRead)
-    {
-        progressBar_.reset();
-        return;
-    };
+    if (!bytesRead) return;
 
     proto::FileChunk fileChunkMsg;
     fileChunkMsg.set_id(chunkId);
@@ -250,10 +211,10 @@ void Sender::sendChunk(std::shared_ptr<std::ifstream> file, uint64_t totalChunks
         [this, file, totalChunks, chunkId](const std::error_code& ec, size_t) mutable {
             if (ec)
             {
-                std::println(stderr, "Message sending failed {}", ec.message());
+                ui_->displayError(std::format("Message sending failed {}", ec.message()));
                 return;
             }
-            progressBar_->add(chunkId);
+            ui_->updateProgress(chunkId);
             sendChunk(file, totalChunks, ++chunkId);
         });
 }
@@ -264,17 +225,17 @@ void Sender::handleFileTransferComplete(std::unique_ptr<google::protobuf::Any> a
 
     if (const auto unpackResult = anyPtr->UnpackTo(&resp); !unpackResult)
     {
-        std::println(stderr, "Failed to unpack message to FileTransferComplete");
+        ui_->displayError("Failed to unpack message to FileTransferComplete");
         return;
     }
 
     if (const bool result = resp.result() == proto::Result::ACCEPTED; !result)
     {
-        std::println("Receiver failed the file transfer");
+        ui_->displayMessage("Receiver failed the file transfer");
         return;
     }
 
-    std::println("Transfer completed");
+    ui_->displayMessage("Transfer completed");
 
     connection_->accessMsgReceiver().unsubscribe();
     cleanup();

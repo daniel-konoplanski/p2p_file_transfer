@@ -5,14 +5,14 @@ add_subdirectory(lib.comms)
 add_subdirectory(lib.filesystem)
 add_subdirectory(lib.certs)
 add_subdirectory(lib.utils)
+add_subdirectory(lib.ui)
 
 add_executable(
         p2p_ft main.cpp
         p2pft/sender/sender.cpp
         p2pft/startup/startup.cpp
         p2pft/receiver/receiver.cpp
-        p2pft/connection/connection.cpp
-        p2pft/progress_bar/progress_bar.cpp)
+        p2pft/connection/connection.cpp)
 
 target_link_libraries(p2p_ft
     PUBLIC p2pft_proto_lib
@@ -20,6 +20,7 @@ target_link_libraries(p2p_ft
     PUBLIC comms
     PUBLIC filesystem
     PUBLIC utils
+    PUBLIC ui
     PUBLIC Boost::asio
     PUBLIC Boost::system
     PUBLIC protobuf::libprotobuf

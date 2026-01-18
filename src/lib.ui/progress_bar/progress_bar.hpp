@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+
 #include <indicators/progress_bar.hpp>
 
 namespace p2pft

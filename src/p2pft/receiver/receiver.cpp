@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <filesystem>
+#include <format>
 #include <memory>
 #include <print>
 #include <string>
@@ -26,6 +27,7 @@
 #include "lib.comms/i_receiver.hpp"
 #include "lib.comms/message_sender/message_sender.hpp"
 #include "lib.filesystem/file_writer.hpp"
+#include "lib.ui/console_user_interface.hpp"
 #include "lib.utils/format.hpp"
 
 namespace p2pft
@@ -34,20 +36,11 @@ namespace p2pft
 namespace
 {
 
-bool getUserConfirmation()
-{
-    std::string response;
-    std::getline(std::cin, response);
-
-    std::ranges::transform(response, response.begin(), tolower);
-
-    return response == "yes" || response == "y";
-}
-
 }  // namespace
 
 Receiver::Receiver(cli::ReceiverArgs args)
     : args_{ std::move(args) }
+    , ui_{ std::make_unique<ui::ConsoleUserInterface>() }
 {
 }
 
@@ -57,27 +50,27 @@ void Receiver::run()
 
     io_ = std::make_shared<boost::asio::io_context>();
 
-    std::println("Listening on 0.0.0.0:{}...", args_.port);
+    ui_->displayMessage(std::format("Listening on 0.0.0.0:{}...", args_.port));
 
     auto maybeSession = comms::ConnectionManager::listen(io_, args_.port);
 
     if (!maybeSession)
     {
-        std::println(stderr, "Failed to receive connection");
+        ui_->displayError("Failed to receive connection");
         return;
     }
 
     connection_ = std::make_unique<Connection>(*maybeSession);
 
-    const auto& remoteEndpoint = connection_->accessSession().getRemoteEndpoint();
+    const auto& endpoint = connection_->accessSession().getRemoteEndpoint();
 
-    std::println("Incoming connection from {}:{}", remoteEndpoint.address().to_string(), remoteEndpoint.port());
+    ui_->displayMessage(std::format("Incoming connection from {}:{}", endpoint.address().to_string(), endpoint.port()));
 
     connection_->accessMsgReceiver().subscribe(
         [this](const std::error_code& ec, std::unique_ptr<google::protobuf::Any> anyPtr) {
             if (ec)
             {
-                std::println("Message receiving failed: {}", ec.message());
+                ui_->displayError(std::format("Message receiving failed: {}", ec.message()));
                 return;
             }
 
@@ -107,7 +100,7 @@ void Receiver::handleFileTransferProposalReq(std::unique_ptr<google::protobuf::A
 
     if (const auto unpackResult = anyPtr->UnpackTo(&req); !unpackResult)
     {
-        std::println(stderr, "Failed to unpack message to FileTransferProposalReq");
+        ui_->displayError("Failed to unpack message to FileTransferProposalReq");
         return;
     }
 
@@ -116,16 +109,17 @@ void Receiver::handleFileTransferProposalReq(std::unique_ptr<google::protobuf::A
 
     if (auto spaceInfo = std::filesystem::space(args_.outDir); spaceInfo.available < fileInfo_.size_)
     {
-        std::println(
-            stderr,
+        auto msg = std::format(
             "Not enough available space in the provided location {}, needed: {}, available: {}",
             args_.outDir,
             fileInfo_.size_,
             spaceInfo.available);
+
+        ui_->displayError(msg);
         return;
     }
 
-    std::println("Proposal: {} — {}", utils::formatBytes(fileInfo_.size_), fileInfo_.name_);
+    ui_->displayMessage(std::format("Proposal: {} — {}", fileInfo_.name_, utils::formatBytes(fileInfo_.size_)));
 
     sendFileTransferProposalResp();
 }
@@ -138,24 +132,24 @@ void Receiver::handleFileChunk(std::unique_ptr<google::protobuf::Any> anyPtr)
 
     if (const auto unpackResult = anyPtr->UnpackTo(&msg); !unpackResult)
     {
-        std::println(stderr, "Failed to unpack message to FileTransferProposalReq");
+        ui_->displayError("Failed to unpack message to FileTransferProposalReq");
         sendFileTransferComplete(REJECTED);
         return;
     }
 
-    if (!progressBar_) progressBar_ = std::make_unique<ProgressBar>(fileInfo_.size_);
+    ui_->createProgressTracker(fileInfo_.size_);
 
     const bool isLast = msg.is_last();
     const auto& data  = msg.data();
 
     static auto fileWriter = std::make_unique<files::FileWriter>(args_.outDir, fileInfo_.name_);
     fileWriter->write(data, isLast);
-    progressBar_->add(data.size());
+    ui_->updateProgress(data.size());
 
     if (isLast)
     {
         fileWriter = nullptr;
-        std::println("File saved: {}", args_.outDir + "/" + fileInfo_.name_);
+        ui_->displayMessage(std::format("File saved: {}", args_.outDir + "/" + fileInfo_.name_));
         sendFileTransferComplete(ACCEPTED);
     }
 }
@@ -165,21 +159,21 @@ void Receiver::sendFileTransferProposalResp()
     using enum proto::Result;
     proto::FileTransferProposalResp resp;
 
-    std::print("Accept transfer? (y/N): ");
-    const proto::Result reqResult = getUserConfirmation() ? ACCEPTED : REJECTED;
+    ui_->displayMessage("Accept transfer? (y/N): ");
+    auto reqResult = ui_->confirm() ? ACCEPTED : REJECTED;
 
     resp.set_result(reqResult);
 
     connection_->accessMsgSender().send(resp, [this, reqResult](const std::error_code& ec, size_t) {
         if (ec)
         {
-            std::println("Sending FileTransferProposalResp failed: {}", ec.message());
+            ui_->displayError(std::format("Sending FileTransferProposalResp failed: {}", ec.message()));
             return;
         }
 
         if (reqResult == REJECTED)
         {
-            std::println("File transfer rejected");
+            ui_->displayMessage("File transfer rejected");
             cleanup();
         }
     });
@@ -191,7 +185,7 @@ void Receiver::sendFileTransferComplete(const proto::Result result)
     resp.set_result(result);
 
     connection_->accessMsgSender().send(resp, [this](const std::error_code& ec, size_t) {
-        std::println("File transfer completed", ec.message());
+        ui_->displayError(std::format("File transfer completed", ec.message()));
         cleanup();
     });
 }

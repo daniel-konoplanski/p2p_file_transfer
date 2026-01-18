@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 
 #include <boost/asio/io_context.hpp>
@@ -12,7 +13,7 @@
 
 #include "p2pft/application.hpp"
 #include "p2pft/connection/connection.hpp"
-#include "p2pft/progress_bar/progress_bar.hpp"
+#include "lib.ui/i_userinterface.hpp"
 
 namespace p2pft
 {
@@ -46,7 +47,7 @@ private:
     FileInfo fileInfo_;
     std::shared_ptr<boost::asio::io_context> io_;
     std::unique_ptr<Connection> connection_;
-    std::unique_ptr<ProgressBar> progressBar_;
+    std::unique_ptr<ui::IUserInterface> ui_;
 };
 
 }  // namespace p2pft
