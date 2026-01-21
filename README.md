@@ -71,12 +71,12 @@ cmake --build --preset <preset-name>
 
 **Receiver mode** - Start listening for incoming transfers:
 ```bash
-./p2pft --mode receiver --port 8080 --output-dir /path/to/save/
+./p2pft receive -p 31444 -o /path/to/save/
 ```
 
 **Sender mode** - Send a file to a receiver:
 ```bash
-./p2pft --mode sender --address 192.168.1.100 --port 8080 --file /path/to/file.zip
+./p2pft send -a 192.168.1.100 -p 31444 --file /path/to/file.zip
 ```
 
 ## Third-Party Libraries
